@@ -9,8 +9,7 @@ class Route
 {
 	public:
 		Route(int nbVoiture);
-		Route(int nbVoiture, int limite);
-		Route(int nbVoiture, int limite, int tailleRoute);
+		Route(int nbVoiture, int limite, int tailleRoute, int frein);
 		void ajouterVoiture(int numVoiture);
 		void enleverVoiture(int numVoiture);
 		void placementAleatoireDepart();
