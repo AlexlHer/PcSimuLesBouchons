@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// Projet Bouchon v0.1
+// Projet Bouchon v0.2
 // --------------------------------
 #include <iostream>
 #include <fstream>
@@ -14,7 +14,14 @@ void affiche(vector<int>v)
 {
 	for (int i = 0; i < v.size(); i++)
 	{
-		cout << v[i] << " ";
+		if (v[i] == -1) 
+		{
+			cout << " " << " ";
+		}
+		else
+		{
+			cout << v[i] << " ";
+		}
 	}
 	cout << endl;
 }
@@ -23,7 +30,7 @@ int main()
 {
 	int a = 0;
 	vector<int> v;
-	Route r = Route(2);
+	Route r = Route(20);
 	v = r.tabAffiche();
 	affiche(v);
 	r.tempsPlus(1);
@@ -35,7 +42,14 @@ int main()
 
 /**
 Changelog :
+v0.2 :
+(build 32)
+
+Corrections de bugs pour le déplacement de voiture dans la fonction Route::modeleNash().
+Un constructeur enlevé dans Route.
+
 v0.1 : 
+(build 1)
 
 Dans class Route :
 Route(int nbVoiture);
@@ -71,6 +85,6 @@ int getVitesse();
 int vitesse;
 int imatriculation;
 
-Premi�re version du projet bouchon.
-D�but : 01/04/2017
+Première version du projet bouchon.
+Début : 01/04/2017
 **/
