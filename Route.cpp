@@ -1,40 +1,36 @@
 #include "Route.h"
+#include <iostream>
 
 using namespace std;
 
 Route::Route(int nbVoiture)
 {
-	for (int i = 0; i < nbVoiture; i++)
-	{
-		Voiture v(i);
-		tabVoiture.push_back(v);
-	}
+	srand(time(NULL));
 	limiteDeVitesse = 5;
-	tabRoute.resize(nbVoiture*2);
-	Route::placementAleatoireDepart();
-}
-
-Route::Route(int nbVoiture, int limite)
-{
 	for (int i = 0; i < nbVoiture; i++)
 	{
 		Voiture v(i);
+		v.setVitesse(rand() % limiteDeVitesse);
 		tabVoiture.push_back(v);
 	}
-	limiteDeVitesse = limite;
 	tabRoute.resize(nbVoiture*2);
+	probaFrein = 10;
 	Route::placementAleatoireDepart();
 }
 
-Route::Route(int nbVoiture, int limite, int tailleRoute)
+Route::Route(int nbVoiture, int limite, int tailleRoute, int frein)
 {
+	srand(time(NULL));
+	limiteDeVitesse = limite;
 	for (int i = 0; i < nbVoiture; i++)
 	{
 		Voiture v(i);
+		v.setVitesse(rand() % limiteDeVitesse);
 		tabVoiture.push_back(v);
 	}
-	limiteDeVitesse = limite;
 	tabRoute.resize(tailleRoute);
+	probaFrein = frein;
+	Route::placementAleatoireDepart();
 }
 
 void Route::ajouterVoiture(int numVoiture) 
@@ -105,12 +101,18 @@ int Route::espaceAvant(int imaticulation)
 	{
 		a++;
 	}
+
 	if (a + b >= tabRoute.size())
 	{
 		a -= tabRoute.size();
 	}
+	
 	while (tabRoute[a+b].getImatriculation() == -1)
 	{
+		if (a + b + 1 >= tabRoute.size())
+		{
+			a -= tabRoute.size();
+		}
 		b++;
 	}
 	return b;
@@ -148,39 +150,45 @@ void Route::modeleNash()
 		}
 
 		b = Route::espaceAvant(tabRoute[a].getImatriculation()) - 1;
+		//cout << b << endl;
 		if (tabRoute[a].getVitesse() > b)
 		{
 			tabRoute[a].setVitesse(b);
 		}
 
-		//if (Route::determineFrein())
-		//{
-		//	tabRoute[a].setVitesse(tabRoute[a].getVitesse() - 1);
-		//}
+		if (Route::determineFrein())
+		{
+			tabRoute[a].setVitesse(tabRoute[a].getVitesse() - 1);
+		}
 		if (tabRoute[a].getVitesse() < 0)
 		{
 			tabRoute[a].setVitesse(0);
 		}
+		//cout << tabRoute[a].getVitesse() << endl;
+		a++;
 	}
 	a = 0, b = 0;
 	Voiture v;
+	vector<Voiture> tv = tabRoute;
 	for (int i = 0; i < tabVoiture.size(); i++)
 	{
 		while (tabRoute[a].getImatriculation() == -1)
 		{
 			a++;
 		}
-
-		if (a + tabRoute[a].getVitesse() >= tabRoute.size())
+		//cout << a << endl;
+		if (a + tv[a].getVitesse() >= tv.size())
 		{
-			b = a - tabRoute.size() + tabRoute[a].getVitesse();
+			b = a - tv.size() + tv[a].getVitesse();
 		}
 		else
 		{
-			b = a + tabRoute[a].getVitesse();
+			b = a + tv[a].getVitesse();
 		}
-		v = tabRoute[a];
-		tabRoute[a] = tabRoute[b];
-		tabRoute[b] = v;
+		v = tv[a];
+		tv[a] = tv[b];
+		tv[b] = v;
+		a++;
 	}
+	tabRoute = tv;
 }
