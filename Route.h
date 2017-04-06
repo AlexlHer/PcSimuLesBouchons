@@ -8,6 +8,7 @@
 class Route
 {
 	public:
+		Route();
 		Route(int nbVoiture);
 		Route(int nbVoiture, int limite, int tailleRoute, int frein);
 		void ajouterVoiture();
@@ -18,20 +19,20 @@ class Route
 		void placementAleatoire(Voiture v);
 		void placementAleatoireDepart();
 		void tempsPlus(int temps, int modele);
-		std::vector<int> tabAffiche();
+		std::vector<Voiture> tabAffiche();
 		int getTailleRoute();
 		void setTailleRoute(int taille);
 		void setLimiteVitesse(int vit);
 		int espaceAvant(int imaticulation);
 		void setProbaFrein(int pourcent);
 		int getProbaFrein();
+		int getNbVoiture();
 
 	private:
 		std::vector<Voiture> tabVoiture;
 		std::vector<Voiture> tabRoute;
 		int limiteDeVitesse;
 		int probaFrein;
-
 		void modeleNash();
 		bool determineFrein();
 };
