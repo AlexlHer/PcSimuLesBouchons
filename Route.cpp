@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// Projet Bouchon v0.3 : Classe Route
+// Projet Bouchon v0.4 : Classe Route
 // --------------------------------
 
 #include "Route.h"
@@ -15,6 +15,13 @@ bool operator==(Voiture &v1, Voiture &v2)
 		return true;
 	}
 	return false;
+}
+
+Route::Route()
+{
+	srand(time(NULL));
+	limiteDeVitesse = 5;
+	probaFrein = 10;
 }
 
 /* Constructeur rapide
@@ -263,12 +270,12 @@ void Route::modeleNash()
 	tabRoute = tv;
 }
 
-vector<int> Route::tabAffiche()
+int Route::getNbVoiture()
 {
-	vector<int> v;
-	for (int i = 0; i < tabRoute.size(); i++)
-	{
-		v.push_back(tabRoute[i].getVitesse());
-	}
-	return v;
+	return tabVoiture.size();
+}
+
+vector<Voiture> Route::tabAffiche()
+{
+	return tabRoute;
 }
