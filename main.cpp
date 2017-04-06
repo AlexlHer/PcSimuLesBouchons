@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// Projet Bouchon v0.3
+// Projet Bouchon v0.4
 // --------------------------------
 #include <iostream>
 #include <fstream>
@@ -8,7 +8,7 @@
 #include <string>
 #include <cassert>
 #include <chrono>
-#include "Route.h"
+#include "GestiRoute.h"
 
 using namespace std::chrono;
 using namespace std;
@@ -85,113 +85,41 @@ bool has_passed(unsigned int arg_time) {
 #endif 
 #endif
 
-enum Clavier {
-	N = 'N',
-	n = 'n',
-	P = 'P',
-	p = 'p',
-	Q = 'Q',
-	q = 'q',
-	S = 'S',
-	s = 's',
-	M = 'M',
-	m = 'm',
-	PLUS = '+',
-	MOINS = '-',
-	ESPACE = ' ',
-	PPOINT = '.',
-};
-
-void affiche(vector<int>v)
-{
-	for (int i = 0; i < v.size(); i++)
-	{
-		if (v[i] == -1) 
-		{
-			cout << " " << " ";
-		}
-		else
-		{
-			cout << v[i] << " ";
-		}
-	}
-	cout << endl;
-}
-
 int main() 
 {
-	int a = 0;
-	vector<int> v;
 	bool arret = false;
 	int nb_voiture = 18;
-	int etape = 1;
-
-	Route r = Route(nb_voiture);
-	v = r.tabAffiche();
-	affiche(v);
+	GestiRoute r = GestiRoute(nb_voiture);
 
 	while (!arret)
 	{
-		r.tempsPlus(etape, 0);
-		v = r.tabAffiche();
-		CLEAR;
-		affiche(v);
+		r.affichageRoutes();
+		r.plusEtape();
 		init_timer();
-		while (!has_passed(500))
+		while (!has_passed(1000))
 		{
+			CLEAR;
+			r.affichageCommandes();
 			if (PRESSEDKEY)
 			{
-				char input = GETKEY;
-				if (input == ESPACE)
-				{
-					arret = true;
-				}
-				else if (input == N)
-				{
-					r.ajouterVoiture();
-				}
-				else if (input == n)
-				{
-					r.enleverVoiture();
-				}
-				else if (input == P)
-				{
-					a = r.getProbaFrein();
-					r.setProbaFrein(a + 10);
-				}
-				else if (input == p)
-				{
-					a = r.getProbaFrein();
-					r.setProbaFrein(a - 10);
-				}
-				else if (input == S)
-				{
-					etape++;
-				}
-				else if (input == s)
-				{
-					etape--;
-					if (etape < 1)
-					{
-						etape = 1;
-					}
-				}
-				else if (input == M)
-				{
-				}
-				else if (input == m)
-				{
-				}
+				r.setTouche(GETKEY);
 			}
 		}
 	}
-
-
 	return 0;
 }
 
 /**
 Changelog :
+
+v0.4 :
+(build 72/06/04/2017)
+Création de GestiRoute, qui permet de gérer complétement une Route :
+- Affichage version test.
+- Une seule route pour l'instant
+Refonte du main.cpp pour GestiRoute.
+
+
 v0.3 :
 (build 65/06/04/2017)
 
@@ -208,6 +136,7 @@ v0.2 :
 
 Corrections de bugs pour le déplacement de voiture dans la fonction Route::modeleNash().
 Un constructeur enlevé dans Route.
+
 
 v0.1 : 
 (build 1/02/04/2017)
