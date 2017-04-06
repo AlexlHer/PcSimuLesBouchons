@@ -1,14 +1,106 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// Projet Bouchon v0.2
+// Projet Bouchon v0.3
 // --------------------------------
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
+#include <cassert>
+#include <chrono>
 #include "Route.h"
 
+using namespace std::chrono;
 using namespace std;
+
+int time_start_value;
+int time_end_value;
+
+void init_timer() {
+	time_start_value = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
+
+bool has_passed(unsigned int arg_time) {
+	time_end_value = duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count();
+	return (time_end_value - time_start_value >= arg_time);
+}
+
+#ifdef _WIN32
+	#include <windows.h>
+	#include <conio.h>
+
+	#define PRESSEDKEY _kbhit()
+	#define GETKEY _getch()
+	#define CLEAR system("cls")
+	#define KEYINIT 0
+	#define KEYEND  0
+	#ifndef NULL 
+	#define NULL 0
+#endif 
+
+#else
+	#include <stdio.h>
+	#include <termios.h>
+	#include <unistd.h>
+	#include <sys/types.h>
+	#include <sys/time.h>
+
+	void changemode(int dir)
+	{
+		static struct termios oldt, newt;
+
+		if (dir == 1)
+		{
+			tcgetattr(STDIN_FILENO, &oldt);
+			newt = oldt;
+			newt.c_lflag &= ~(ICANON | ECHO);
+			tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+		}
+		else
+			tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+	}
+
+	int _kbhit(void)
+	{
+		struct timeval tv;
+		fd_set rdfs;
+
+		tv.tv_sec = 0;
+		tv.tv_usec = 0;
+
+		FD_ZERO(&rdfs);
+		FD_SET(STDIN_FILENO, &rdfs);
+
+		select(STDIN_FILENO + 1, &rdfs, NULL, NULL, &tv);
+		return FD_ISSET(STDIN_FILENO, &rdfs);
+	}
+
+	#define PRESSEDKEY _kbhit()
+	#define GETKEY getchar()
+	#define CLEAR system("clear")
+	#define KEYINIT changemode(1)
+	#define KEYEND  changemode(0)
+	#ifndef NULL 
+	#define NULL 0
+#endif 
+#endif
+
+enum Clavier {
+	N = 'N',
+	n = 'n',
+	P = 'P',
+	p = 'p',
+	Q = 'Q',
+	q = 'q',
+	S = 'S',
+	s = 's',
+	M = 'M',
+	m = 'm',
+	PLUS = '+',
+	MOINS = '-',
+	ESPACE = ' ',
+	PPOINT = '.',
+};
 
 void affiche(vector<int>v)
 {
@@ -30,26 +122,95 @@ int main()
 {
 	int a = 0;
 	vector<int> v;
-	Route r = Route(20);
+	bool arret = false;
+	int nb_voiture = 18;
+	int etape = 1;
+
+	Route r = Route(nb_voiture);
 	v = r.tabAffiche();
 	affiche(v);
-	r.tempsPlus(1);
-	v = r.tabAffiche();
-	affiche(v);
-	cin >> a;
+
+	while (!arret)
+	{
+		r.tempsPlus(etape, 0);
+		v = r.tabAffiche();
+		CLEAR;
+		affiche(v);
+		init_timer();
+		while (!has_passed(500))
+		{
+			if (PRESSEDKEY)
+			{
+				char input = GETKEY;
+				if (input == ESPACE)
+				{
+					arret = true;
+				}
+				else if (input == N)
+				{
+					r.ajouterVoiture();
+				}
+				else if (input == n)
+				{
+					r.enleverVoiture();
+				}
+				else if (input == P)
+				{
+					a = r.getProbaFrein();
+					r.setProbaFrein(a + 10);
+				}
+				else if (input == p)
+				{
+					a = r.getProbaFrein();
+					r.setProbaFrein(a - 10);
+				}
+				else if (input == S)
+				{
+					etape++;
+				}
+				else if (input == s)
+				{
+					etape--;
+					if (etape < 1)
+					{
+						etape = 1;
+					}
+				}
+				else if (input == M)
+				{
+				}
+				else if (input == m)
+				{
+				}
+			}
+		}
+	}
+
+
 	return 0;
 }
 
 /**
 Changelog :
+v0.3 :
+(build 65/06/04/2017)
+
+Gestion des commandes (inclut tous les systèmes d'exploitation (UNIX/WIN)).
+Amélioration de la fonction temporaire d'affichage.
+Création d'un chrono pour la vitesse de la route.
+Classe Route amélioré (ajout et suppression de voiture facilités).
+Ajout d'un operator pour comparer les voitures.
+Correction d'un bug touchant l'aléatoire (le srand était mal placé).
+
+
 v0.2 :
-(build 32)
+(build 32/02/04/2017)
 
 Corrections de bugs pour le déplacement de voiture dans la fonction Route::modeleNash().
 Un constructeur enlevé dans Route.
 
 v0.1 : 
-(build 1)
+(build 1/02/04/2017)
 
 Dans class Route :
 Route(int nbVoiture);
