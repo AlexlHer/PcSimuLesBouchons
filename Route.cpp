@@ -22,6 +22,7 @@ Route::Route()
 	srand(time(NULL));
 	limiteDeVitesse = 5;
 	probaFrein = 10;
+	probaResteArret = 50;
 }
 
 /* Constructeur rapide
@@ -37,8 +38,9 @@ Route::Route(int nbVoiture)
 		v.setVitesse(rand() % limiteDeVitesse);
 		tabVoiture.push_back(v);
 	}
-	tabRoute.resize(nbVoiture*3);
+	tabRoute.resize(nbVoiture*2);
 	probaFrein = 10;
+	probaResteArret = 50;
 	Route::placementAleatoireDepart();
 }
 
@@ -48,10 +50,10 @@ Route::Route(int nbVoiture)
  * @param tailleRoute La taille de la route.
  * @param frein Le pourcentage de freinage aléatoire.
  */
-Route::Route(int nbVoiture, int limite, int tailleRoute, int frein)
+Route::Route(int nbVoiture, int tailleRoute)
 {
 	srand(time(NULL));
-	limiteDeVitesse = limite;
+	limiteDeVitesse = 5;
 	for (int i = 0; i < nbVoiture; i++)
 	{
 		Voiture v(i);
@@ -59,17 +61,21 @@ Route::Route(int nbVoiture, int limite, int tailleRoute, int frein)
 		tabVoiture.push_back(v);
 	}
 	tabRoute.resize(tailleRoute);
-	probaFrein = frein;
+	probaFrein = 10;
+	probaResteArret = 50;
 	Route::placementAleatoireDepart();
 }
 
 void Route::ajouterVoiture() 
 {
-	Voiture v;
-	v.setImatriculation(tabVoiture.size());
-	v.setVitesse(rand() % limiteDeVitesse);
-	tabVoiture.push_back(v);
-	Route::placementAleatoire(v);
+	if(tabVoiture.size() < tabRoute.size())
+	{
+		Voiture v;
+		v.setImatriculation(tabVoiture.size());
+		v.setVitesse(rand() % limiteDeVitesse);
+		tabVoiture.push_back(v);
+		Route::placementAleatoire(v);
+	}
 }
 
 void Route::ajouterVoiture(Voiture v)
@@ -140,12 +146,11 @@ void Route::placementAleatoireDepart()
 	}
 }
 
-void Route::tempsPlus(int temps, int modele)
+void Route::tempsPlus(int temps, int modeleNV)
 {
 	for (int i = 0; i < temps; i++)
 	{
-		if(modele == 0)
-			Route::modeleNash();
+		Route::modele(modeleNV);
 	}
 }
 
@@ -156,7 +161,25 @@ int  Route::getTailleRoute()
 
 void Route::setTailleRoute(int taille)
 {
-	tabRoute.resize(taille);
+	if (taille < tabRoute.size())
+	{
+		if (taille >= tabVoiture.size())
+		{
+			vector<Voiture> v;
+			for (int i = taille; i < tabRoute.size(); i++) {
+				if (tabRoute[i].getImatriculation() != -1) {
+					v.push_back(tabRoute[i]);
+				}
+			}
+			tabRoute.resize(taille);
+			for (int i = 0; i < v.size(); i++)
+			{
+				Route::placementAleatoire(v[i]);
+			}
+		}
+	}
+	else
+		tabRoute.resize(taille);
 }
 
 void Route::setLimiteVitesse(int vit)
@@ -200,6 +223,28 @@ int  Route::getProbaFrein()
 	return probaFrein;
 }
 
+void Route::setProbaResteArret(int pourcent)
+{
+	if (pourcent < 0) pourcent = 0;
+	if (pourcent > 100) pourcent = 100;
+	probaResteArret = pourcent;
+}
+
+int  Route::getProbaResteArret()
+{
+	return probaResteArret;
+}
+
+bool Route::determineResteArret()
+{
+	vector<bool> a(probaResteArret, true);
+	for (int i = 0; i < 100 - probaResteArret; i++)
+	{
+		a.push_back(false);
+	}
+	return a[rand() % 100];
+}
+
 bool Route::determineFrein()
 {
 	vector<bool> a(probaFrein, true);
@@ -210,7 +255,7 @@ bool Route::determineFrein()
 	return a[rand() % 100];
 }
 
-void Route::modeleNash()
+void Route::modele(int nom_modele)
 {
 	int a = 0, b = 0;
 	for (int i = 0; i < tabVoiture.size(); i++)
@@ -220,31 +265,40 @@ void Route::modeleNash()
 			a++;
 		}
 
-		if (limiteDeVitesse > tabRoute[a].getVitesse())
-		{
-			tabRoute[a].setVitesse(tabRoute[a].getVitesse() + 1);
-		}
+		int vitesseVoiture = tabRoute[a].getVitesse();
+		int immatriVoiture = tabRoute[a].getImatriculation();
 
-		b = Route::espaceAvant(tabRoute[a].getImatriculation());
-		//cout << b << endl;
-		if (tabRoute[a].getVitesse() > b)
+		if ( !(nom_modele == 1 && vitesseVoiture == 0 && Route::determineResteArret()))
 		{
-			tabRoute[a].setVitesse(b);
-		}
+			if (limiteDeVitesse > vitesseVoiture)
+			{
+				vitesseVoiture++;
+			}
 
-		if (Route::determineFrein())
-		{
-			tabRoute[a].setVitesse(tabRoute[a].getVitesse() - 1);
-		}
+			b = Route::espaceAvant(immatriVoiture) - 1;
+			//cout << b << endl;
+			if (vitesseVoiture > b)
+			{
+				vitesseVoiture = b;
+			}
 
-		if (tabRoute[a].getVitesse() < 0)
-		{
-			tabRoute[a].setVitesse(0);
+			if (Route::determineFrein())
+			{
+				vitesseVoiture--;
+			}
+
+			if (vitesseVoiture < 0)
+			{
+				vitesseVoiture = 0;
+			}
+			//cout << tabRoute[a].getVitesse() << endl;
+
+			tabRoute[a].setVitesse(vitesseVoiture);
 		}
-		//cout << tabRoute[a].getVitesse() << endl;
 		a++;
 	}
 	a = 0, b = 0;
+	int c;
 	Voiture v;
 	vector<Voiture> tv = tabRoute;
 	for (int i = 0; i < tabVoiture.size(); i++)
@@ -262,9 +316,17 @@ void Route::modeleNash()
 		{
 			b = a + tv[a].getVitesse();
 		}
-		v = tv[a];
-		tv[a] = tv[b];
-		tv[b] = v;
+		if (a != b)
+		{
+			//if (tv[b].getVitesse() != -1)
+			//{
+			//	cout << "Erreur !!! " << tv[a].getImatriculation() << " ; "<< tv[b].getImatriculation();
+			//	cin >> c;
+			//}
+			v = tv[a];
+			tv[a] = tv[b];
+			tv[b] = v;
+		}
 		a++;
 	}
 	tabRoute = tv;
