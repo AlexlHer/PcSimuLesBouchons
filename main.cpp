@@ -88,29 +88,45 @@ bool has_passed(unsigned int arg_time) {
 int main() 
 {
 	bool arret = false;
-	int nb_voiture = 18;
+	int nb_voiture = 10;
 	GestiRoute r = GestiRoute(nb_voiture);
 
 	while (!arret)
 	{
+		CLEAR;
 		r.affichageRoutes();
-		r.plusEtape();
+		r.affichageCommandes();
 		init_timer();
-		while (!has_passed(1000))
+		while (!has_passed(r.vitesse()))
 		{
-			CLEAR;
-			r.affichageCommandes();
 			if (PRESSEDKEY)
 			{
 				r.setTouche(GETKEY);
+
+				CLEAR;
+				r.affichageRoutes();
+				r.affichageCommandes();
 			}
 		}
+		r.plusEtape();
 	}
 	return 0;
 }
 
 /**
 Changelog :
+v0.5 :
+(build 104/09/04/2017)
+Verification complète de la methode Route::modele après la découverte d'un bug de remplacement de voiture.
+Debuggage de la methode Route::modele() avec le debuggeur VS++.
+ : - Correction de quelques lignes avec des calculs erronés.
+   - Verification de la partie permettant d'avancer les voitures avec leurs vitesses.
+   - Lisibilité du code accrue.
+Possibilité de mettre en pause la simulation.
+Possibilité de mettre plusieurs routes.
+Bug au niveau des "voitures fantomes" resolu.
+Taille de route par defaut passe de 18*3 a 10*2.
+Gestion du multi-route ajouter dans l'affichage.
 
 v0.4 :
 (build 72/06/04/2017)
