@@ -10,7 +10,7 @@ class Route
 	public:
 		Route();
 		Route(int nbVoiture);
-		Route(int nbVoiture, int limite, int tailleRoute, int frein);
+		Route(int nbVoiture, int tailleRoute);
 		void ajouterVoiture();
 		void ajouterVoiture(Voiture v);
 		void ajouterVoiture(Voiture v, int pos);
@@ -18,7 +18,7 @@ class Route
 		void enleverVoiture(Voiture v);
 		void placementAleatoire(Voiture v);
 		void placementAleatoireDepart();
-		void tempsPlus(int temps, int modele);
+		void tempsPlus(int temps, int modeleNV);
 		std::vector<Voiture> tabAffiche();
 		int getTailleRoute();
 		void setTailleRoute(int taille);
@@ -26,6 +26,8 @@ class Route
 		int espaceAvant(int imaticulation);
 		void setProbaFrein(int pourcent);
 		int getProbaFrein();
+		void setProbaResteArret(int pourcent);
+		int getProbaResteArret();
 		int getNbVoiture();
 
 	private:
@@ -33,8 +35,11 @@ class Route
 		std::vector<Voiture> tabRoute;
 		int limiteDeVitesse;
 		int probaFrein;
-		void modeleNash();
+		int probaResteArret;
+
 		bool determineFrein();
+		void modele(int nom_modele);
+		bool determineResteArret();
 };
 
 #endif
