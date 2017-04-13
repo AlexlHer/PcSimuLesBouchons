@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// Projet Bouchon v0.3 : Classe Voiture
+// Projet Bouchon v0.6 : Classe Voiture
 // --------------------------------
 
 #include "Voiture.h"
