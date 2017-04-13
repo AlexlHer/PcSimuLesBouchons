@@ -1,6 +1,6 @@
 #ifndef DEF_VOITURE
 #define DEF_VOITURE
-
+ 
 class Voiture
 {
 	public:
