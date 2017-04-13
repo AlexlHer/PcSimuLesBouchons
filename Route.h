@@ -11,15 +11,18 @@ class Route
 		Route();
 		Route(int nbVoiture);
 		Route(int nbVoiture, int tailleRoute);
+		bool intIn(int i, std::vector<int> dans);
 		void ajouterVoiture();
+		void ajouterVoiture(int imatriculation);
 		void ajouterVoiture(Voiture v);
 		void ajouterVoiture(Voiture v, int pos);
 		void enleverVoiture();
-		void enleverVoiture(Voiture v);
+		void enleverVoiture(int imatriculation);
 		void placementAleatoire(Voiture v);
 		void placementAleatoireDepart();
 		void tempsPlus(int temps, int modeleNV);
 		std::vector<Voiture> tabAffiche();
+		std::vector<Voiture> getTabVoiture();
 		int getTailleRoute();
 		void setTailleRoute(int taille);
 		void setLimiteVitesse(int vit);
@@ -38,6 +41,7 @@ class Route
 		int probaResteArret;
 
 		bool determineFrein();
+		void actualiserTabVoiture();
 		void modele(int nom_modele);
 		bool determineResteArret();
 };
