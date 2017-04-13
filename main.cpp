@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// Projet Bouchon v0.4
+// Projet Bouchon v0.6
 // --------------------------------
 #include <iostream>
 #include <fstream>
@@ -102,7 +102,6 @@ int main()
 			if (PRESSEDKEY)
 			{
 				r.setTouche(GETKEY);
-
 				CLEAR;
 				r.affichageRoutes();
 				r.affichageCommandes();
@@ -115,22 +114,42 @@ int main()
 
 /**
 Changelog :
+A venir :
+Readme Github.
+Passage de version beta en version stable.
+Passage de l'affichage version beta en affichage version finale.
+Ajout des commentaires.
+Nettoyage du code.
+Optimisation du code.
+
+v0.6 :
+(build 140/13/04/2017)
+Gestion de la liaison de route pour le d�passement de voiture dans GestiRoute.
+Integration des liaisons dans toutes les fonctions existante.
+Corrections dans les Route::ajouteVoiture et dans les Route::enleveVoiture pour corriger probleme de multiple voiture avec la meme immatriculation.
+Cr�ation de Route::actualiserTabVoiture() pour r�soudre des bugs de comparaison de voiture.
+Amelioration de GestiRoute::affichageRoute() pour le multi-liaison.
+Ajout et suppression des voitures en prenant en compte les voitures sur les liaisons.
+Commandes pour controler les routes misent dans GestiRoute pour pouvoir gerer les liaisons avec les routes.
+Ajout des touches + et - pour accelerer la vitesse de changement de commande.
+Verification de toutes les modifications et des integrations dans les fonctions existante.
+
 v0.5 :
 (build 104/09/04/2017)
-Verification complète de la methode Route::modele après la découverte d'un bug de remplacement de voiture.
+Verification compl�te de la methode Route::modele apr�s la d�couverte d'un bug de remplacement de voiture.
 Debuggage de la methode Route::modele() avec le debuggeur VS++.
- : - Correction de quelques lignes avec des calculs erronés.
+ : - Correction de quelques lignes avec des calculs erron�s.
    - Verification de la partie permettant d'avancer les voitures avec leurs vitesses.
-   - Lisibilité du code accrue.
-Possibilité de mettre en pause la simulation.
-Possibilité de mettre plusieurs routes.
+   - Lisibilit� du code accrue.
+Possibilit� de mettre en pause la simulation.
+Possibilit� de mettre plusieurs routes.
 Bug au niveau des "voitures fantomes" resolu.
 Taille de route par defaut passe de 18*3 a 10*2.
 Gestion du multi-route ajouter dans l'affichage.
 
 v0.4 :
 (build 72/06/04/2017)
-Création de GestiRoute, qui permet de gérer complétement une Route :
+Cr�ation de GestiRoute, qui permet de g�rer compl�tement une Route :
 - Affichage version test.
 - Une seule route pour l'instant
 Refonte du main.cpp pour GestiRoute.
@@ -139,19 +158,19 @@ Refonte du main.cpp pour GestiRoute.
 v0.3 :
 (build 65/06/04/2017)
 
-Gestion des commandes (inclut tous les systèmes d'exploitation (UNIX/WIN)).
-Amélioration de la fonction temporaire d'affichage.
-Création d'un chrono pour la vitesse de la route.
-Classe Route amélioré (ajout et suppression de voiture facilités).
+Gestion des commandes (inclut tous les syst�mes d'exploitation (UNIX/WIN)).
+Am�lioration de la fonction temporaire d'affichage.
+Cr�ation d'un chrono pour la vitesse de la route.
+Classe Route am�lior� (ajout et suppression de voiture facilit�s).
 Ajout d'un operator pour comparer les voitures.
-Correction d'un bug touchant l'aléatoire (le srand était mal placé).
+Correction d'un bug touchant l'al�atoire (le srand �tait mal plac�).
 
 
 v0.2 :
 (build 32/02/04/2017)
 
-Corrections de bugs pour le déplacement de voiture dans la fonction Route::modeleNash().
-Un constructeur enlevé dans Route.
+Corrections de bugs pour le d�placement de voiture dans la fonction Route::modeleNash().
+Un constructeur enlev� dans Route.
 
 
 v0.1 : 
@@ -191,6 +210,6 @@ int getVitesse();
 int vitesse;
 int imatriculation;
 
-Première version du projet bouchon.
-Début : 01/04/2017
+Premi�re version du projet bouchon.
+D�but : 01/04/2017
 **/
