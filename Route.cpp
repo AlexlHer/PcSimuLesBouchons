@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// Projet Bouchon v0.4 : Classe Route
+// Projet Bouchon v0.6 : Classe Route
 // --------------------------------
 
 #include "Route.h"
@@ -48,7 +48,7 @@ Route::Route(int nbVoiture)
  * @param nbVoiture Le nombre de voiture.
  * @param limite La limite de vitesse.
  * @param tailleRoute La taille de la route.
- * @param frein Le pourcentage de freinage aléatoire.
+ * @param frein Le pourcentage de freinage al�atoire.
  */
 Route::Route(int nbVoiture, int tailleRoute)
 {
@@ -66,12 +66,49 @@ Route::Route(int nbVoiture, int tailleRoute)
 	Route::placementAleatoireDepart();
 }
 
+bool Route::intIn(int intt, vector<int> dans)
+{
+	for (int i = 0; i < dans.size(); i++)
+	{
+		if (dans[i] == intt)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 void Route::ajouterVoiture() 
 {
 	if(tabVoiture.size() < tabRoute.size())
 	{
+		vector<int> immatri;
+		for (int i = 0; i < tabVoiture.size(); i++)
+		{
+			immatri.push_back(tabVoiture[i].getImatriculation());
+		}
+
+		int a = 0;
+
+		while (Route::intIn(a, immatri))
+		{
+			a++;
+		}
+
 		Voiture v;
-		v.setImatriculation(tabVoiture.size());
+		v.setImatriculation(a);
+		v.setVitesse(rand() % limiteDeVitesse);
+		tabVoiture.push_back(v);
+		Route::placementAleatoire(v);
+	}
+}
+
+void Route::ajouterVoiture(int imatriculation)
+{
+	if (tabVoiture.size() < tabRoute.size())
+	{
+		Voiture v;
+		v.setImatriculation(imatriculation);
 		v.setVitesse(rand() % limiteDeVitesse);
 		tabVoiture.push_back(v);
 		Route::placementAleatoire(v);
@@ -80,42 +117,53 @@ void Route::ajouterVoiture()
 
 void Route::ajouterVoiture(Voiture v)
 {
-	tabVoiture.push_back(v);
-	Route::placementAleatoire(v);
+	if (tabVoiture.size() < tabRoute.size())
+	{
+		tabVoiture.push_back(v);
+		Route::placementAleatoire(v);
+	}
 }
 
 void Route::ajouterVoiture(Voiture v, int pos)
 {
-	tabVoiture.push_back(v);
-	tabRoute[pos] = v;
+	if (tabVoiture.size() < tabRoute.size())
+	{
+		if (pos < tabRoute.size())
+		{
+			tabVoiture.push_back(v);
+			tabRoute[pos] = v;
+		}
+	}
 }
 
 void Route::enleverVoiture()
 {
-	Voiture v;
-	tabVoiture.resize(tabVoiture.size() - 1);
+	Voiture v1, v2;
+	v2 = tabVoiture[tabVoiture.size() - 1];
+	tabVoiture.pop_back();
 	for (int i = 0; i < tabRoute.size(); i++)
 	{
-		if (tabRoute[i].getImatriculation() == tabVoiture.size()-1)
+		if (tabRoute[i].getImatriculation() == v2.getImatriculation())
 		{
-			tabRoute[i] = v;
+			tabRoute[i] = v1;
 		}
 	}
 }
 
-void Route::enleverVoiture(Voiture v)
+void Route::enleverVoiture(int imatriculation)
 {
 	Voiture w;
+	int a = 0;
 	for (int i = 0; i < tabVoiture.size(); i++)
 	{
-		if (tabVoiture[i] == v)
+		if (tabVoiture[i].getImatriculation() == imatriculation)
 		{
-			tabVoiture[i] = w;
+			tabVoiture.erase(tabVoiture.begin() + i);
 		}
 	}
 	for (int i = 0; i < tabRoute.size(); i++)
 	{
-		if (tabRoute[i] == v)
+		if (tabRoute[i].getImatriculation() == imatriculation)
 		{
 			tabRoute[i] = w;
 		}
@@ -255,6 +303,20 @@ bool Route::determineFrein()
 	return a[rand() % 100];
 }
 
+void Route::actualiserTabVoiture()
+{
+	for (int i = 0; i < tabVoiture.size(); i++)
+	{
+		for (int j = 0; j < tabRoute.size(); j++)
+		{
+			if (tabVoiture[i].getImatriculation() == tabRoute[j].getImatriculation())
+			{
+				tabVoiture[i].setVitesse(tabRoute[j].getVitesse());
+			}
+		}
+	}
+}
+
 void Route::modele(int nom_modele)
 {
 	int a = 0, b = 0;
@@ -330,6 +392,7 @@ void Route::modele(int nom_modele)
 		a++;
 	}
 	tabRoute = tv;
+	Route::actualiserTabVoiture();
 }
 
 int Route::getNbVoiture()
@@ -340,4 +403,9 @@ int Route::getNbVoiture()
 vector<Voiture> Route::tabAffiche()
 {
 	return tabRoute;
+}
+
+vector<Voiture> Route::getTabVoiture()
+{
+	return tabVoiture;
 }
