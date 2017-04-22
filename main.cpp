@@ -1,43 +1,48 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// Projet Bouchon v0.6
+// PcSimuLesBouchons v1.0
 // --------------------------------
+
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <string>
-#include <cassert>
 #include <chrono>
 #include "GestiRoute.h"
 
 using namespace std::chrono;
 using namespace std;
 
+// Variables globales pour gérer le chrono.
 int time_start_value;
 int time_end_value;
 
+// Procédure permettant d'initialiser le chrono.
 void init_timer() {
 	time_start_value = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
 
+/*
+Fonction permettant de savoir si le temps arg_time est passé.
+@param Le temps en miliseconde.
+@return un booleen true si le temps arg_time est passé, false sinon.
+*/
 bool has_passed(unsigned int arg_time) {
 	time_end_value = duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count();
 	return (time_end_value - time_start_value >= arg_time);
 }
 
+
+// Blocs permettant de definir des "raccourcis" pour capturer les touches et autres, selon le systeme d'exploitation.
+// Windows
 #ifdef _WIN32
 	#include <windows.h>
 	#include <conio.h>
 
-	#define PRESSEDKEY _kbhit()
-	#define GETKEY _getch()
-	#define CLEAR system("cls")
-	#define KEYINIT 0
-	#define KEYEND  0
-	#ifndef NULL 
-	#define NULL 0
-#endif 
+	#define AppuiTouche _kbhit()
+	#define Clavier _getch()
+	#define Clear system("cls")
 
+// UNIX (MACOS/LINUX)
 #else
 	#include <stdio.h>
 	#include <termios.h>
@@ -75,38 +80,42 @@ bool has_passed(unsigned int arg_time) {
 		return FD_ISSET(STDIN_FILENO, &rdfs);
 	}
 
-	#define PRESSEDKEY _kbhit()
-	#define GETKEY getchar()
-	#define CLEAR system("clear")
-	#define KEYINIT changemode(1)
-	#define KEYEND  changemode(0)
-	#ifndef NULL 
-	#define NULL 0
-#endif 
+	#define AppuiTouche _kbhit()
+	#define Clavier getchar()
+	#define Clear system("clear")
 #endif
 
+// Fonction principale.
 int main() 
 {
-	bool arret = false;
-	int nb_voiture = 10;
-	GestiRoute r = GestiRoute(nb_voiture);
+	// On crée un GestiRoute pour gérer plusieurs routes. On met 10 voitures sur la route par défaut.
+	GestiRoute r = GestiRoute(10);
 
-	while (!arret)
+	// Tant que getQuit renvoi false.
+	while (!r.getQuit())
 	{
-		CLEAR;
-		r.affichageRoutes();
-		r.affichageCommandes();
+		// Partie qui sera affiché toutes les r.vitesse() ms.
+		Clear;
+		r.sortieAffichage();
+
+		// On initialise le chrono.
 		init_timer();
+
+		// La boucle tourne tant que r.vitesse() ms n'est pas écoulée.
 		while (!has_passed(r.vitesse()))
 		{
-			if (PRESSEDKEY)
+			// Si on appuie sur une touche.
+			if (AppuiTouche)
 			{
-				r.setTouche(GETKEY);
-				CLEAR;
-				r.affichageRoutes();
-				r.affichageCommandes();
+				// On donne la touche à r.
+				r.setTouche(Clavier);
+
+				// On affiche les routes et les commandes à chaque fois qu'on appuie sur une touche.
+				Clear;
+				r.sortieAffichage();
 			}
 		}
+		// On fait avancer la route le nombre de fois voulu.
 		r.plusEtape();
 	}
 	return 0;
@@ -114,20 +123,27 @@ int main()
 
 /**
 Changelog :
-A venir :
-Readme Github.
-Passage de version beta en version stable.
-Passage de l'affichage version beta en affichage version finale.
-Ajout des commentaires.
-Nettoyage du code.
-Optimisation du code.
+Bug restants :
+Vitesse limité au nombre de case -1.
+Bug non résolu dans supprimeLiaison.
+
+v1.0 :
+(build 152/23/04/2017)
+Projet bouchon devient PcSimuLesBouchons (ou PcSLB).
+Sortie de beta pour l'affichage.
+Help integré.
+Pause améliorée.
+Bug resolu : Quand on enleve une route et que cette route est séléctionnée.
+Activation du mode VDR en changant proba q.
+Possibilité de modifier la limite de vitesse.
+Code de l'affichage amélioré.
 
 v0.6 :
 (build 140/13/04/2017)
-Gestion de la liaison de route pour le d�passement de voiture dans GestiRoute.
+Gestion de la liaison de route pour le dépassement de voiture dans GestiRoute.
 Integration des liaisons dans toutes les fonctions existante.
 Corrections dans les Route::ajouteVoiture et dans les Route::enleveVoiture pour corriger probleme de multiple voiture avec la meme immatriculation.
-Cr�ation de Route::actualiserTabVoiture() pour r�soudre des bugs de comparaison de voiture.
+Création de Route::actualiserTabVoiture() pour résoudre des bugs de comparaison de voiture.
 Amelioration de GestiRoute::affichageRoute() pour le multi-liaison.
 Ajout et suppression des voitures en prenant en compte les voitures sur les liaisons.
 Commandes pour controler les routes misent dans GestiRoute pour pouvoir gerer les liaisons avec les routes.
@@ -136,20 +152,20 @@ Verification de toutes les modifications et des integrations dans les fonctions 
 
 v0.5 :
 (build 104/09/04/2017)
-Verification compl�te de la methode Route::modele apr�s la d�couverte d'un bug de remplacement de voiture.
+Verification complète de la methode Route::modele après la découverte d'un bug de remplacement de voiture.
 Debuggage de la methode Route::modele() avec le debuggeur VS++.
- : - Correction de quelques lignes avec des calculs erron�s.
+ : - Correction de quelques lignes avec des calculs erronés.
    - Verification de la partie permettant d'avancer les voitures avec leurs vitesses.
-   - Lisibilit� du code accrue.
-Possibilit� de mettre en pause la simulation.
-Possibilit� de mettre plusieurs routes.
+   - Lisibilité du code accrue.
+Possibilité de mettre en pause la simulation.
+Possibilité de mettre plusieurs routes.
 Bug au niveau des "voitures fantomes" resolu.
 Taille de route par defaut passe de 18*3 a 10*2.
 Gestion du multi-route ajouter dans l'affichage.
 
 v0.4 :
 (build 72/06/04/2017)
-Cr�ation de GestiRoute, qui permet de g�rer compl�tement une Route :
+Création de GestiRoute, qui permet de gérer complétement une Route :
 - Affichage version test.
 - Une seule route pour l'instant
 Refonte du main.cpp pour GestiRoute.
@@ -158,19 +174,19 @@ Refonte du main.cpp pour GestiRoute.
 v0.3 :
 (build 65/06/04/2017)
 
-Gestion des commandes (inclut tous les syst�mes d'exploitation (UNIX/WIN)).
-Am�lioration de la fonction temporaire d'affichage.
-Cr�ation d'un chrono pour la vitesse de la route.
-Classe Route am�lior� (ajout et suppression de voiture facilit�s).
+Gestion des commandes (inclut tous les systèmes d'exploitation (UNIX/WIN)).
+Amélioration de la fonction temporaire d'affichage.
+Création d'un chrono pour la vitesse de la route.
+Classe Route amélioré (ajout et suppression de voiture facilités).
 Ajout d'un operator pour comparer les voitures.
-Correction d'un bug touchant l'al�atoire (le srand �tait mal plac�).
+Correction d'un bug touchant l'aléatoire (le srand était mal placé).
 
 
 v0.2 :
 (build 32/02/04/2017)
 
-Corrections de bugs pour le d�placement de voiture dans la fonction Route::modeleNash().
-Un constructeur enlev� dans Route.
+Corrections de bugs pour le déplacement de voiture dans la fonction Route::modeleNash().
+Un constructeur enlevé dans Route.
 
 
 v0.1 : 
@@ -210,6 +226,6 @@ int getVitesse();
 int vitesse;
 int imatriculation;
 
-Premi�re version du projet bouchon.
-D�but : 01/04/2017
+Première version du projet bouchon.
+Début : 01/04/2017
 **/
