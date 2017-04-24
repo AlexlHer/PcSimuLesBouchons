@@ -1,9 +1,23 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// PcSimuLesBouchons v1.0 : Classe Voiture
+// PcSimuLesBouchons v2.0 : Classe Voiture
 // --------------------------------
 
 #include "Voiture.h"
+
+/*
+Operateur de comparaison pour savoir si une voiture est identique à une autre.
+@params Les deux voitures à comparer.
+@return true si les vitesses et les immatriculations correspondent, false sinon.
+*/
+bool operator==(Voiture &v6, Voiture &v8)
+{
+	if (v6.getImatriculation() == v8.getImatriculation() && v6.getVitesse() == v8.getVitesse())
+	{
+		return true;
+	}
+	return false;
+}
 
 /*
 Constructeur d'une voiture "vide".
