@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// PcSimuLesBouchons v1.0
+// PcSimuLesBouchons v2.0
 // --------------------------------
 
 #include <iostream>
@@ -109,7 +109,6 @@ int main()
 			{
 				// On donne la touche à r.
 				r.setTouche(Clavier);
-
 				// On affiche les routes et les commandes à chaque fois qu'on appuie sur une touche.
 				Clear;
 				r.sortieAffichage();
@@ -123,9 +122,20 @@ int main()
 
 /**
 Changelog :
-Bug restants :
-Vitesse limité au nombre de case -1.
-Bug non résolu dans supprimeLiaison.
+
+v2.0 : (version SuperStable)
+(build 170/24/04/2017)
+Changement de l'algorithme de dépassement des voitures dans les liaisons.
+Construction des fonctions permettant un retour arrière !
+Ajout des touches Début et Fin pour l'interface.
+Vitesse limité au nombre de case -1, liée à Route::espaceAvant qui détermine que la voiture 
+de devant est elle_même. Pas utile de résoudre cela puisque l'interet de mettre une seule voiture sur
+la route est nul.
+Correction de la boucle infinie lorsqu'une liaison est vide et qu'elle passe dans gestiLiaison.
+Bug dans supprimeLiaison résolu.
+Bug de compilation g++ résolu (compilateur testés : VS++ et g++).
+Encore un peu de commentaire !
+Déplacement de ajouterRembobinage() de affichageRoute à etapePlus pour éviter les "trous" dans les enregistrement dù à l'appuie sur les touches.
 
 v1.0 :
 (build 152/23/04/2017)
@@ -137,7 +147,9 @@ Bug resolu : Quand on enleve une route et que cette route est séléctionnée.
 Activation du mode VDR en changant proba q.
 Possibilité de modifier la limite de vitesse.
 Code de l'affichage amélioré.
+Bugs restant.
 
+Version BetaNonStable :
 v0.6 :
 (build 140/13/04/2017)
 Gestion de la liaison de route pour le dépassement de voiture dans GestiRoute.
