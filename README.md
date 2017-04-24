@@ -4,8 +4,7 @@ Projet final d'Info121 du deuxième semestre de MPI.
 Ce projet consiste à simuler une route avec des voitures pouvant créer des bouchons.
 
 ## ChangeLog de la dernière version (v2.0) : 
-## (version SuperStable)
-## (build 170/24/04/2017)
+## (Version SuperStable / Build 170/24/04/2017)
 
 Changement de l'algorithme de dépassement des voitures dans les liaisons.
 
