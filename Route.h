@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// PcSimuLesBouchons v1.0 : Classe Route
+// PcSimuLesBouchons v2.0 : Classe Route
 // --------------------------------
 
 #ifndef DEF_ROUTE
@@ -28,6 +28,7 @@ class Route
 		void tempsPlus(int temps, int modeleNV);
 		std::vector<Voiture> tabAffiche();
 		std::vector<Voiture> getTabVoiture();
+		int espaceAvant(int imaticulation);
 
 		// Accesseurs
 		int getTailleRoute();
@@ -42,11 +43,11 @@ class Route
 
 	private:
 		// Attributs
-		std::vector<Voiture> tabVoiture;
-		std::vector<Voiture> tabRoute;
-		int limiteDeVitesse;
-		int probaFrein;
-		int probaResteArret;
+		std::vector<Voiture> tabVoiture;	// Contient toutes les voitures présente sur la route.
+		std::vector<Voiture> tabRoute;		// Contient la route (avec les voitures de tabVoiture et des "voiture vide".
+		int limiteDeVitesse;				// Contient la limite de vitesse de la route.
+		int probaFrein;						// Contient la proba de freinage des voitures.
+		int probaResteArret;				// Contient la proba de redemarrage des voitures.
 
 		// Méthodes
 		bool determineFrein();
@@ -56,7 +57,6 @@ class Route
 		bool intIn(int i, std::vector<int> dans);
 		void placementAleatoire(Voiture v);
 		void placementAleatoireDepart();
-		int espaceAvant(int imaticulation);
 };
 
 #endif
