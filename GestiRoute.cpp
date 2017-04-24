@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// PcSimuLesBouchons v1.0 : Classe GestiRoute
+// PcSimuLesBouchons v2.0 : Classe GestiRoute
 // --------------------------------
 
 #include "GestiRoute.h"
@@ -22,19 +22,19 @@ Operateur permettant d'additionner deux vectors de voiture.
 @params Les deux vectors à assembler.
 @return Le vector resultat.
 */
-vector<Voiture> operator+(vector<Voiture> &a, vector<Voiture> &b)
+vector<Voiture> operator+(vector<Voiture> const& a9, vector<Voiture> const& b8)
 {
 	// On crée un vector qui sera returner.
 	vector<Voiture> v;
 
 	// Pour tous les éléments des deux vector, on met l'élément i dans v.
-	for (int i = 0; i < a.size(); i++)
+	for (int i = 0; i < a9.size(); i++)
 	{
-		v.push_back(a[i]);
+		v.push_back(a9[i]);
 	}
-	for (int i = 0; i < b.size(); i++)
+	for (int i = 0; i < b8.size(); i++)
 	{
-		v.push_back(b[i]);
+		v.push_back(b8[i]);
 	}
 
 	// On retourne le vector v.
@@ -72,7 +72,6 @@ GestiRoute::GestiRoute(int nb_voiture)
 	routes.push_back(r);
 
 	// On initialise les differantes variables.
-	temps_attente = 1;
 	route_a_gerer = 0;
 	position_curseur = 0;
 	etape = 1;
@@ -81,6 +80,8 @@ GestiRoute::GestiRoute(int nb_voiture)
 	affichage_instruction = true;
 	quit = false;
 	mode_affichage = 0;
+	nb_rembobinage = 10;
+	cb_de_rembobinage = 0;
 }
 
 /*
@@ -153,6 +154,7 @@ void GestiRoute::gestiLiaison()
 	// On prend deux voitures vides et deux routes vides.
 	vector<Voiture> r1, r2;
 	Route *route1, *route2;
+	int espace_avant;
 
 	// Pour toutes les routes du vector routes.
 	for (int i = 0; i < routes.size(); i++)
@@ -187,8 +189,11 @@ void GestiRoute::gestiLiaison()
 			// Pour toutes les voitures de route r1 (on peux faire toutes les voitures, même les vides car les vides ont une vitesse de -1).
 			for (int j = 0; j < r1.size() - 1; j++)
 			{
-				// On verifie si notre voiture est arreté, celle de devant est aussi arreté, la case d'à coté est vide et celle de devant est vide.
-				if (r1[j].getVitesse() == 0 && r1[j + 1].getVitesse() == 0 && r2[j].getImatriculation() == -1 && r2[j + 1].getImatriculation() == -1)
+				// Espace avant entre notre voiture et la voiture suivante.
+				espace_avant = route1->espaceAvant(r1[j].getImatriculation());
+
+				// On verifie si notre voiture est plus rapide que l'espace avant, si la vitesse de la voiture suivante est inferieur a la vitesse de notre voiture, si la case d'à coté est vide et celle de devant est vide.
+				if (r1[j].getVitesse() >= espace_avant && r1[j].getVitesse() >= r1[espace_avant+1].getVitesse() && r2[j].getImatriculation() == -1 && r2[j + 1].getImatriculation() == -1)
 				{
 					// Si c'est le cas, on enleve la voiture et on la place à coté, une case plus haute (en diagonale).
 					route1->enleverVoiture(r1[j].getImatriculation());
@@ -205,8 +210,11 @@ void GestiRoute::gestiLiaison()
 			// Pour toutes les voitures de route r2 (on peux faire toutes les voitures, même les vides car les vides ont une vitesse de -1).
 			for (int j = 0; j < r2.size() - 1; j++)
 			{
-				// On verifie si notre voiture est arreté, celle de devant est aussi arreté, la case d'à coté est vide et celle de devant est vide.
-				if (r2[j].getVitesse() == 0 && r2[j + 1].getVitesse() == 0 && r1[j].getImatriculation() == -1 && r1[j + 1].getImatriculation() == -1 && !GestiRoute::voitureIn(r2[j], temp))
+				// Espace avant entre notre voiture et la voiture suivante.
+				espace_avant = route2->espaceAvant(r2[j].getImatriculation());
+
+				// On verifie si notre voiture est plus rapide que l'espace avant, si la vitesse de la voiture suivante est inferieur a la vitesse de notre voiture, si case d'à coté est vide et celle de devant est vide.
+				if (r2[j].getVitesse() > espace_avant && r2[j].getVitesse() > r2[espace_avant+1].getVitesse() && r1[j].getImatriculation() == -1 && r1[j + 1].getImatriculation() == -1 && !GestiRoute::voitureIn(r2[j], temp))
 				{
 					// Si c'est le cas, on enleve la voiture et on la place à coté, une case plus haute (en diagonale).
 					route2->enleverVoiture(r2[j].getImatriculation());
@@ -226,16 +234,11 @@ Méthode pour supprimer une liaison de la route séléctionnée.
 */
 void GestiRoute::supprimeLiaison()
 {
-	// Pour tous les éléments de liaisons.
-	for (int i = 0; i < liaisons.size(); i++) 
-	{
-		// 
-		if (liaisons[i][0] == route_a_gerer)
-		{
-			routes_liee.erase(routes_liee.begin() + liaisons[i][1]);
-			liaisons.erase(liaisons.begin() + i);
-		}
-	}
+	vector<int> toutes_liaisons = GestiRoute::routesLiee(route_a_gerer);
+	int pos_a_suppr = toutes_liaisons[toutes_liaisons.size() - 1];
+
+	routes_liee.erase(routes_liee.begin() + liaisons[pos_a_suppr][1]);
+	liaisons.erase(liaisons.begin() + pos_a_suppr);
 }
 
 /*
@@ -269,6 +272,8 @@ void GestiRoute::setTouche(char clavier)
 	// Espace = 32
 	// Plus + = 43
 	// Moins - = 45
+	// Début = 71
+	// Fin = 79
 
 	// Si on appuie sur N.
 	if (clavier == 'n' || clavier == 'N')
@@ -292,13 +297,14 @@ void GestiRoute::setTouche(char clavier)
 	else if (clavier == 32)
 	{
 		// Si le programme n'est pas sur pause.
-		if(etape_temp == 0)
+		if(!pause)
 		{
 			// On save les valeurs actuel et on met sur pause.
 			etape_temp = etape;
 			etape = 0;
 			vitDeDefil_temp = vitDeDefil;
 			vitDeDefil = 9999;
+			pause = true;
 		}
 		else
 		{
@@ -307,6 +313,10 @@ void GestiRoute::setTouche(char clavier)
 			etape_temp = 0;
 			vitDeDefil = vitDeDefil_temp;
 			vitDeDefil_temp = 0;
+			pause = false;
+
+			cb_de_rembobinage = 0;
+			GestiRoute::enleverRembobinage();
 		}
 
 	}
@@ -322,14 +332,26 @@ void GestiRoute::setTouche(char clavier)
 		}
 	}
 
+	// Si on appuie sur Début.
+	else if (clavier == 71)
+	{
+		position_curseur = 0;
+	}
+
+	// Si on appuie sur Fin.
+	else if (clavier == 79)
+	{
+		position_curseur = (pause ? 13 : 12);
+	}
+
 	// Si on appuie sur Bas.
 	else if (clavier == 80)
 	{
 		// On change la position du curseur.
 		position_curseur++;
-		if (position_curseur > 11)
+		if (position_curseur > (pause ? 13 : 12))
 		{
-			position_curseur = 11;
+			position_curseur = (pause ? 13 : 12);
 		}
 	}
 
@@ -413,7 +435,7 @@ void GestiRoute::setTouche(char clavier)
 			}
 		}
 
-		// Si le curseur est en position 6.
+		// Si le curseur est en position 06.
 		else if (position_curseur == 6)
 		{
 			// Si on appuie sur Gauche, on fait -1 à la taille route, si on appuie sur Moins, on fait -5.
@@ -435,7 +457,7 @@ void GestiRoute::setTouche(char clavier)
 			}
 		}
 
-		// Si le curseur est en position 8.
+		// Si le curseur est en position 08.
 		else if (position_curseur == 8)
 		{
 			// Si on fait Gauche, on fait -10 ms, si on fait Moins, on fait -100 ms.
@@ -455,23 +477,56 @@ void GestiRoute::setTouche(char clavier)
 		// Si le curseur est en position 9.
 		else if (position_curseur == 9)
 		{
-			// On supprime une liaison.
-			GestiRoute::supprimeLiaison();
+			if (GestiRoute::routesLiee(route_a_gerer).size() > 0)
+			{
+				// On supprime une liaison.
+				GestiRoute::supprimeLiaison();
+			}
 		}
 
+		// Si le curseur est en position 10.
 		else if (position_curseur == 10)
 		{
+			// On modifie la limite de vitesse.
 			GestiRoute::setLimiteVitesse(routes[route_a_gerer].getLimiteVitesse() - 1);
 			if (clavier == 45)
 			{
 				GestiRoute::setLimiteVitesse(routes[route_a_gerer].getLimiteVitesse() - 4);
 			}
 		}
+
+		// Si le curseur est en position 11.
 		else if (position_curseur == 11)
 		{
+			// On change de mode d'affichage.
 			mode_affichage--;
 			if (mode_affichage < 0)
 				mode_affichage = 0;
+		}
+
+		// Si le curseur est en position 12.
+		else if (position_curseur == 12)
+		{
+			// On diminue le nombre d'enregistrement.
+			nb_rembobinage--;
+			if (clavier == 45)
+			{
+				nb_rembobinage -= 4;
+			}
+			if (nb_rembobinage < 0)
+				nb_rembobinage = 0;
+		}
+
+		// Si le curseur est en position 13.
+		else if (position_curseur == 13)
+		{
+			cb_de_rembobinage--;
+
+			if (-cb_de_rembobinage > rembobinage_routes.size() - 1)
+			{
+				cb_de_rembobinage++;
+			}
+			GestiRoute::rembobiner();
 		}
 	}
 
@@ -578,7 +633,7 @@ void GestiRoute::setTouche(char clavier)
 			}
 		}
 
-		// Si le curseur est en position 9.
+		// Si le curseur est en position 98.
 		else if (position_curseur == 9)
 		{
 			// On ajoute une liaison.
@@ -600,7 +655,71 @@ void GestiRoute::setTouche(char clavier)
 			if (mode_affichage > 2)
 				mode_affichage = 2;
 		}
+
+		else if (position_curseur == 12)
+		{
+			nb_rembobinage++;
+			if (clavier == 43)
+			{
+				nb_rembobinage += 4;
+			}
+		}
+
+		else if (position_curseur == 13)
+		{
+			cb_de_rembobinage++;
+			if (cb_de_rembobinage > 0)
+			{
+				cb_de_rembobinage = 0;
+			}
+			GestiRoute::rembobiner();
+		}
 	}
+}
+
+/*
+Méthode permettant de supprimer les enregistrements après celui que l'utilisateur à séléctionner.
+*/
+void GestiRoute::enleverRembobinage()
+{
+	for (int i = 0; i < -cb_de_rembobinage + 2; i++)
+	{
+		rembobinage_routes.pop_back();
+		rembobinage_routes_liee.pop_back();
+		rembobinage_liaisons.pop_back();
+	}
+}
+
+/*
+Méthode permettant d'enregistrer un etat de route 
+*/
+void GestiRoute::ajouterRembobinage()
+{
+	rembobinage_routes.push_back(routes);
+	rembobinage_routes_liee.push_back(routes_liee);
+	rembobinage_liaisons.push_back(liaisons);
+
+	// Pour pas dépasser la limite.
+	if (rembobinage_routes.size() > nb_rembobinage + 1)
+	{
+		rembobinage_routes.erase(rembobinage_routes.begin());
+		rembobinage_routes_liee.erase(rembobinage_routes_liee.begin());
+		rembobinage_liaisons.erase(rembobinage_liaisons.begin());
+	}
+}
+
+/*
+Méthode permettant de revenir en arrière.
+*/
+void GestiRoute::rembobiner()
+{
+	int num_des_routes = rembobinage_routes.size() - 1 + cb_de_rembobinage;
+
+	routes = rembobinage_routes[num_des_routes];
+	routes_liee = rembobinage_routes_liee[num_des_routes];
+	liaisons = rembobinage_liaisons[num_des_routes];
+	Clear;
+	GestiRoute::sortieAffichage();
 }
 
 /*
@@ -708,6 +827,7 @@ string GestiRoute::affichageRoutes()
 		route_a_afficher.append("--------------------------------------------------------");
 		route_a_afficher.append("\n");
 	}
+	// On enregistre la route pour le rembobinage.
 	return route_a_afficher;
 }
 
@@ -754,7 +874,7 @@ void GestiRoute::sortieAffichage()
 	int nb_espaces = 10, temp = 0;
 
 	// On affiche les premières infos.
-	cout << "   ----------------------" << endl << "   PcSimuLesBouchons v1.0" << endl << "   ----------------------" << endl;
+	cout << "   ----------------------" << endl << "   PcSimuLesBouchons v2.0" << endl << "   ----------------------" << endl;
 	cout << "--------------------------------------------------------" << endl;
 
 	// On affiche les routes.
@@ -971,10 +1091,48 @@ void GestiRoute::sortieAffichage()
 	cout << GestiRoute::nbEspaceAffichage(nb_espaces, (mode_affichage == 0 ? 10000 : 1000000)) << "Mode d'affichage";
 
 	cout << endl;
+
+	if (position_curseur == 12)
+		cout << "<[(";
+	else
+		cout << "  (";
+
+	temp = nb_rembobinage;
+	cout << temp;
+
+	if (position_curseur == 12)
+		cout << ")]>";
+	else
+		cout << ")  ";
+
+	cout << GestiRoute::nbEspaceAffichage(nb_espaces, temp) << "Nombre de rembobinage";
+
+	cout << endl;
+
+	if (pause)
+	{
+		if (position_curseur == 13)
+			cout << "<[(";
+		else
+			cout << "  (";
+
+		temp = cb_de_rembobinage;
+		cout << temp;
+
+		if (position_curseur == 13)
+			cout << ")]>";
+		else
+			cout << ")  ";
+
+		cout << GestiRoute::nbEspaceAffichage(nb_espaces, temp) << "Rembobinage";
+
+		cout << endl;
+	}
+
 	if (affichage_instruction)
 	{
 		cout << endl;
-		cout << "Appuyer sur \"Espace\" pour mettre en pause la simulation." << endl << "Appuyer sur \"A\" pour afficher l'aide." << endl;
+		cout << "Appuyer sur \"Espace\" pour mettre en pause la simulation et pouvoir utiliser le rembobinage." << endl << "Appuyer sur \"A\" pour afficher l'aide." << endl;
 		cout << "Appuyer sur \"N\" pour masquer/afficher les instructions." << endl << "Appuyer sur \"Q\" pour quitter" << endl;
 	}
 
@@ -998,6 +1156,9 @@ void GestiRoute::plusEtape()
 	}
 	// On gere les dépassements sur d'autres voies.
 	GestiRoute::gestiLiaison();
+
+	// On enregistre les changements.
+	GestiRoute::ajouterRembobinage();
 }
 
 /*
@@ -1125,6 +1286,8 @@ void GestiRoute::help()
 	cout << "Les routes sont separees avec cela : -----------------------------------." << endl;
 	cout << "Les liaisons des routes ne sont pas separées pour representer une route" << endl;
 	cout << "a plusieurs voies." << endl;
+	cout << "Pour naviguer plus rapidement dans l'interface, vous pouvez utiliser les touches" << endl;
+	cout << "Debut, Fin, +, -." << endl;
 	cout << "Bon jeu !" << endl;
 	Pause;
 }
