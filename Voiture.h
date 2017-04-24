@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// PcSimuLesBouchons v1.0 : Classe Voiture
+// PcSimuLesBouchons v2.0 : Classe Voiture
 // --------------------------------
 
 #ifndef DEF_VOITURE
@@ -22,8 +22,8 @@ class Voiture
 
 	private:
 		// Attributs
-		int vitesse;
-		int imatriculation;
+		int vitesse;		// Contient la vitesse de la voiture.
+		int imatriculation;	// Contient l'immatriculation de la voiture.
 };
 
 #endif
