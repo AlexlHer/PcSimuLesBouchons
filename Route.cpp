@@ -1,26 +1,12 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// PcSimuLesBouchons v1.0 : Classe Route
+// PcSimuLesBouchons v2.0 : Classe Route
 // --------------------------------
 
 #include "Route.h"
 #include <iostream>
 
 using namespace std;
-
-/*
-Operateur de comparaison pour savoir si une voiture est identique à une autre.
-@params Les deux voitures à comparer.
-@return true si les vitesses et les immatriculations correspondent, false sinon.
-*/
-bool operator==(Voiture &v1, Voiture &v2)
-{
-	if (v1.getImatriculation() == v2.getImatriculation() && v1.getVitesse() == v2.getVitesse())
-	{
-		return true;
-	}
-	return false;
-}
 
 /*
 Constructeur d'une route vide.
@@ -534,6 +520,12 @@ Méthode qui donne l'espace entre deux voitures.
 */
 int  Route::espaceAvant(int imaticulation)
 {
+	// Pour éviter le bug de la route vide sur une liaison.
+	if (tabVoiture.size() == 0)
+	{
+		return 0;
+	}
+
 	// Deux variables : a correspond à la position de la voiture v 
 	// et b la position de la voiture b à partir de la voiture a (en cas de retour au début du tableau).
 	int a = 0, b = 1;
