@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// PcSimuLesBouchons v2.0
+// PcSimuLesBouchons v3.0
 // --------------------------------
 
 #include <iostream>
@@ -35,58 +35,58 @@ bool has_passed(unsigned int arg_time) {
 // Blocs permettant de definir des "raccourcis" pour capturer les touches et autres, selon le systeme d'exploitation.
 // Windows
 #ifdef _WIN32
-	#include <windows.h>
-	#include <conio.h>
+#include <windows.h>
+#include <conio.h>
 
-	#define AppuiTouche _kbhit()
-	#define Clavier _getch()
-	#define Clear system("cls")
+#define AppuiTouche _kbhit()
+#define Clavier _getch()
+#define Clear system("cls")
 
 // UNIX (MACOS/LINUX)
 #else
-	#include <stdio.h>
-	#include <termios.h>
-	#include <unistd.h>
-	#include <sys/types.h>
-	#include <sys/time.h>
+#include <stdio.h>
+#include <termios.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/time.h>
 
-	void changemode(int dir)
+void changemode(int dir)
+{
+	static struct termios oldt, newt;
+
+	if (dir == 1)
 	{
-		static struct termios oldt, newt;
-
-		if (dir == 1)
-		{
-			tcgetattr(STDIN_FILENO, &oldt);
-			newt = oldt;
-			newt.c_lflag &= ~(ICANON | ECHO);
-			tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-		}
-		else
-			tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+		tcgetattr(STDIN_FILENO, &oldt);
+		newt = oldt;
+		newt.c_lflag &= ~(ICANON | ECHO);
+		tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 	}
+	else
+		tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+}
 
-	int _kbhit(void)
-	{
-		struct timeval tv;
-		fd_set rdfs;
+int _kbhit(void)
+{
+	struct timeval tv;
+	fd_set rdfs;
 
-		tv.tv_sec = 0;
-		tv.tv_usec = 0;
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
 
-		FD_ZERO(&rdfs);
-		FD_SET(STDIN_FILENO, &rdfs);
+	FD_ZERO(&rdfs);
+	FD_SET(STDIN_FILENO, &rdfs);
 
-		select(STDIN_FILENO + 1, &rdfs, NULL, NULL, &tv);
-		return FD_ISSET(STDIN_FILENO, &rdfs);
-	}
+	select(STDIN_FILENO + 1, &rdfs, NULL, NULL, &tv);
+	return FD_ISSET(STDIN_FILENO, &rdfs);
+}
 
-	#define AppuiTouche _kbhit()
-	#define Clavier getchar()
-	#define Clear system("clear")
+#define AppuiTouche _kbhit()
+#define Clavier getchar()
+#define Clear system("clear")
 #endif
 
 // Fonction principale.
-int main() 
+int main()
 {
 	// On crée un GestiRoute pour gérer plusieurs routes. On met 10 voitures sur la route par défaut.
 	GestiRoute r = GestiRoute(10);
@@ -95,7 +95,6 @@ int main()
 	while (!r.getQuit())
 	{
 		// Partie qui sera affiché toutes les r.vitesse() ms.
-		Clear;
 		r.sortieAffichage();
 
 		// On initialise le chrono.
@@ -110,7 +109,6 @@ int main()
 				// On donne la touche à r.
 				r.setTouche(Clavier);
 				// On affiche les routes et les commandes à chaque fois qu'on appuie sur une touche.
-				Clear;
 				r.sortieAffichage();
 			}
 		}
@@ -123,12 +121,22 @@ int main()
 /**
 Changelog :
 
+v3.0 : (version SuperStable)
+(build 186/28/04/2017)
+Optimisation de l'affichage pour éviter trop de clignotement (mais impossible de les enlever pour l'instant).
+Modification de l'affichage des commandes :
+- Tri en fonction des commandes.
+- Affichage de catégories.
+Ajout de condition pour le depassement de voitures.
+Optimisations au niveau des determine_proba dans Route et GestiRoute.
+[Maj du projet Visual Studio 2015 vers Visual Studio 2017]
+
 v2.0 : (version SuperStable)
 (build 170/24/04/2017)
 Changement de l'algorithme de dépassement des voitures dans les liaisons.
 Construction des fonctions permettant un retour arrière !
 Ajout des touches Début et Fin pour l'interface.
-Vitesse limité au nombre de case -1, liée à Route::espaceAvant qui détermine que la voiture 
+Vitesse limité au nombre de case -1, liée à Route::espaceAvant qui détermine que la voiture
 de devant est elle_même. Pas utile de résoudre cela puisque l'interet de mettre une seule voiture sur
 la route est nul.
 Correction de la boucle infinie lorsqu'une liaison est vide et qu'elle passe dans gestiLiaison.
@@ -166,9 +174,9 @@ v0.5 :
 (build 104/09/04/2017)
 Verification complète de la methode Route::modele après la découverte d'un bug de remplacement de voiture.
 Debuggage de la methode Route::modele() avec le debuggeur VS++.
- : - Correction de quelques lignes avec des calculs erronés.
-   - Verification de la partie permettant d'avancer les voitures avec leurs vitesses.
-   - Lisibilité du code accrue.
+: - Correction de quelques lignes avec des calculs erronés.
+- Verification de la partie permettant d'avancer les voitures avec leurs vitesses.
+- Lisibilité du code accrue.
 Possibilité de mettre en pause la simulation.
 Possibilité de mettre plusieurs routes.
 Bug au niveau des "voitures fantomes" resolu.
@@ -201,7 +209,7 @@ Corrections de bugs pour le déplacement de voiture dans la fonction Route::mode
 Un constructeur enlevé dans Route.
 
 
-v0.1 : 
+v0.1 :
 (build 1/02/04/2017)
 
 Dans class Route :
