@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// PcSimuLesBouchons v2.0 : Classe GestiRoute
+// PcSimuLesBouchons v3.0 : Classe GestiRoute
 // --------------------------------
 
 #include "GestiRoute.h"
@@ -10,11 +10,11 @@ using namespace std;
 
 // Blocs permettant de faite des pauses ou des clear selon le system d'exploitation.
 #ifdef _WIN32
-	#define Clear system("cls")
-	#define Pause system("pause.")
+#define Clear system("cls")
+#define Pause system("pause.")
 #else
-	#define Clear system("clear")
-	#define Pause system("read a")
+#define Clear system("clear")
+#define Pause system("read a")
 #endif
 
 /*
@@ -65,6 +65,9 @@ Constructeur permettant d'initialiser un GestiRoute avec une route par défaut d
 */
 GestiRoute::GestiRoute(int nb_voiture)
 {
+	// On initialise l'aléatoire.
+	srand(time(NULL));
+
 	// On construit une route avec nb_voiture voiture(s).
 	Route r = Route(nb_voiture);
 
@@ -82,6 +85,10 @@ GestiRoute::GestiRoute(int nb_voiture)
 	mode_affichage = 0;
 	nb_rembobinage = 10;
 	cb_de_rembobinage = 0;
+	// Pour que les commandes s'affiche.
+	appuie_touche = true;
+	masquer_commandes = false;
+	probaDepassement = 50;
 }
 
 /*
@@ -174,13 +181,13 @@ void GestiRoute::gestiLiaison()
 				route1 = &routes[liaisons[v[0]][0]];
 				route2 = &routes_liee[liaisons[v[0]][1]];
 			}
-			
+
 			// Et puis n eme liaison <-> n+1 eme liaison.
 			else
 			{
-				r1 = routes_liee[liaisons[v[k-1]][1]].tabAffiche();
+				r1 = routes_liee[liaisons[v[k - 1]][1]].tabAffiche();
 				r2 = routes_liee[liaisons[v[k]][1]].tabAffiche();
-				route1 = &routes_liee[liaisons[v[k-1]][1]];
+				route1 = &routes_liee[liaisons[v[k - 1]][1]];
 				route2 = &routes_liee[liaisons[v[k]][1]];
 			}
 			// On crée un vector qui contiendera toutes les voitures qui se sont déjà déplacer pour éviter de les redéplacer.
@@ -193,7 +200,10 @@ void GestiRoute::gestiLiaison()
 				espace_avant = route1->espaceAvant(r1[j].getImatriculation());
 
 				// On verifie si notre voiture est plus rapide que l'espace avant, si la vitesse de la voiture suivante est inferieur a la vitesse de notre voiture, si la case d'à coté est vide et celle de devant est vide.
-				if (r1[j].getVitesse() >= espace_avant && r1[j].getVitesse() >= r1[espace_avant+1].getVitesse() && r2[j].getImatriculation() == -1 && r2[j + 1].getImatriculation() == -1)
+				if (((r1[j].getVitesse() >= espace_avant && r1[j].getVitesse() >= r1[espace_avant + 1].getVitesse())
+					||
+					(r1[j].getVitesse() == 0 && r1[j+1].getVitesse() == 0)) && r2[j].getImatriculation() == -1 && 
+					r2[j + 1].getImatriculation() == -1 && GestiRoute::determineDepassement())
 				{
 					// Si c'est le cas, on enleve la voiture et on la place à coté, une case plus haute (en diagonale).
 					route1->enleverVoiture(r1[j].getImatriculation());
@@ -214,7 +224,10 @@ void GestiRoute::gestiLiaison()
 				espace_avant = route2->espaceAvant(r2[j].getImatriculation());
 
 				// On verifie si notre voiture est plus rapide que l'espace avant, si la vitesse de la voiture suivante est inferieur a la vitesse de notre voiture, si case d'à coté est vide et celle de devant est vide.
-				if (r2[j].getVitesse() > espace_avant && r2[j].getVitesse() > r2[espace_avant+1].getVitesse() && r1[j].getImatriculation() == -1 && r1[j + 1].getImatriculation() == -1 && !GestiRoute::voitureIn(r2[j], temp))
+				if (((r2[j].getVitesse() > espace_avant && r2[j].getVitesse() > r2[espace_avant + 1].getVitesse())
+					||
+					(r1[j].getVitesse() == 0 && r1[j + 1].getVitesse() == 0)) && r1[j].getImatriculation() == -1 &&
+					r1[j + 1].getImatriculation() == -1 && !GestiRoute::voitureIn(r2[j], temp) && GestiRoute::determineDepassement())
 				{
 					// Si c'est le cas, on enleve la voiture et on la place à coté, une case plus haute (en diagonale).
 					route2->enleverVoiture(r2[j].getImatriculation());
@@ -275,6 +288,9 @@ void GestiRoute::setTouche(char clavier)
 	// Début = 71
 	// Fin = 79
 
+	appuie_touche = true;
+	masquer_commandes = false;
+
 	// Si on appuie sur N.
 	if (clavier == 'n' || clavier == 'N')
 	{
@@ -286,18 +302,21 @@ void GestiRoute::setTouche(char clavier)
 	}
 
 	// Si on appuie sur A.
-	if (clavier == 'a' || clavier == 'A')
+	else if (clavier == 'a' || clavier == 'A')
 		GestiRoute::help();
 
 	// Si on appuie sur Q.
-	if (clavier == 'q' || clavier == 'Q')
+	else if (clavier == 'q' || clavier == 'Q')
 		quit = true;
+
+	else if (clavier == 'c' || clavier == 'C')
+		masquer_commandes = true;
 
 	// Si on appuie sur Espace.
 	else if (clavier == 32)
 	{
 		// Si le programme n'est pas sur pause.
-		if(!pause)
+		if (!pause)
 		{
 			// On save les valeurs actuel et on met sur pause.
 			etape_temp = etape;
@@ -349,9 +368,9 @@ void GestiRoute::setTouche(char clavier)
 	{
 		// On change la position du curseur.
 		position_curseur++;
-		if (position_curseur > (pause ? 13 : 12))
+		if (position_curseur > (pause ? 14 : 13))
 		{
-			position_curseur = (pause ? 13 : 12);
+			position_curseur = (pause ? 14 : 13);
 		}
 	}
 
@@ -362,13 +381,13 @@ void GestiRoute::setTouche(char clavier)
 		if (position_curseur == 0)
 		{
 			// Si on appuie sur Gauche, on supprime une route, si on appuie sur Moins, deux routes.
-			if(routes.size() > 1)
+			if (routes.size() > 1)
 				GestiRoute::supprimerRoute();
 
 			if (clavier == 45)
 			{
 				if (routes.size() > 1)
-				GestiRoute::supprimerRoute();
+					GestiRoute::supprimerRoute();
 			}
 			// On évite que la route séléctionnée soit celle supprimée, pour éviter les bugs.
 			if (route_a_gerer == routes.size())
@@ -400,8 +419,8 @@ void GestiRoute::setTouche(char clavier)
 			}
 		}
 
-		// Si le curseur est en position 3.
-		else if (position_curseur == 3)
+		// Si le curseur est en position 4.
+		else if (position_curseur == 4)
 		{
 			// Si on appuie sur Gauche, on fait -1 à la proba de freinage, si on appuie sur Moins, on fait -10.
 			GestiRoute::setProbaFrein(routes[route_a_gerer].getProbaFrein() - 1);
@@ -412,8 +431,8 @@ void GestiRoute::setTouche(char clavier)
 			}
 		}
 
-		// Si le curseur est en position 4.
-		else if (position_curseur == 4)
+		// Si le curseur est en position 5.
+		else if (position_curseur == 5)
 		{
 			// Si on appuie sur Gauche, on fait -1 à la proba de redemarrage, si on appuie sur Moins, on fait -10.
 			GestiRoute::setProbaResteArret(routes[route_a_gerer].getProbaResteArret() - 1);
@@ -424,8 +443,8 @@ void GestiRoute::setTouche(char clavier)
 			mode = 1;
 		}
 
-		// Si le curseur est en position 5.
-		else if (position_curseur == 5)
+		// Si le curseur est en position 12.
+		else if (position_curseur == 12)
 		{
 			// Si on fait Gauche ou Moins, on enleve une étape.
 			etape--;
@@ -435,8 +454,8 @@ void GestiRoute::setTouche(char clavier)
 			}
 		}
 
-		// Si le curseur est en position 06.
-		else if (position_curseur == 6)
+		// Si le curseur est en position 08.
+		else if (position_curseur == 8)
 		{
 			// Si on appuie sur Gauche, on fait -1 à la taille route, si on appuie sur Moins, on fait -5.
 			GestiRoute::setTailleRoute(routes[route_a_gerer].getTailleRoute() - 1);
@@ -446,8 +465,8 @@ void GestiRoute::setTouche(char clavier)
 			}
 		}
 
-		// Si le curseur est en position 7.
-		else if (position_curseur == 7)
+		// Si le curseur est en position 3.
+		else if (position_curseur == 3)
 		{
 			// Si on fait Gauche ou Moins, on change de mode.
 			mode--;
@@ -457,8 +476,8 @@ void GestiRoute::setTouche(char clavier)
 			}
 		}
 
-		// Si le curseur est en position 08.
-		else if (position_curseur == 8)
+		// Si le curseur est en position 10.
+		else if (position_curseur == 10)
 		{
 			// Si on fait Gauche, on fait -10 ms, si on fait Moins, on fait -100 ms.
 			vitDeDefil -= 10;
@@ -484,8 +503,8 @@ void GestiRoute::setTouche(char clavier)
 			}
 		}
 
-		// Si le curseur est en position 10.
-		else if (position_curseur == 10)
+		// Si le curseur est en position 7.
+		else if (position_curseur == 7)
 		{
 			// On modifie la limite de vitesse.
 			GestiRoute::setLimiteVitesse(routes[route_a_gerer].getLimiteVitesse() - 1);
@@ -504,8 +523,8 @@ void GestiRoute::setTouche(char clavier)
 				mode_affichage = 0;
 		}
 
-		// Si le curseur est en position 12.
-		else if (position_curseur == 12)
+		// Si le curseur est en position 13.
+		else if (position_curseur == 13)
 		{
 			// On diminue le nombre d'enregistrement.
 			nb_rembobinage--;
@@ -517,8 +536,20 @@ void GestiRoute::setTouche(char clavier)
 				nb_rembobinage = 0;
 		}
 
+		else if (position_curseur == 6)
+		{
+			// Si on appuie sur Gauche, on fait -1 à la proba de redemarrage, si on appuie sur Moins, on fait -10.
+			probaDepassement--;
+			if (clavier == 45)
+			{
+				probaDepassement -= 9;
+			}
+			if (probaDepassement < 0)
+				probaDepassement = 0;
+		}
+
 		// Si le curseur est en position 13.
-		else if (position_curseur == 13)
+		else if (position_curseur == 14)
 		{
 			cb_de_rembobinage--;
 
@@ -552,7 +583,7 @@ void GestiRoute::setTouche(char clavier)
 			route_a_gerer++;
 			if (route_a_gerer >= routes.size())
 			{
-				route_a_gerer = routes.size()-1;
+				route_a_gerer = routes.size() - 1;
 			}
 		}
 
@@ -570,8 +601,8 @@ void GestiRoute::setTouche(char clavier)
 			}
 		}
 
-		// Si le curseur est en position 3.
-		else if (position_curseur == 3)
+		// Si le curseur est en position 4.
+		else if (position_curseur == 4)
 		{
 			// Si on appuie sur Droite, on fait +1 à la proba de freinage, si on appuie sur Plus, on fait +10.
 			GestiRoute::setProbaFrein(routes[route_a_gerer].getProbaFrein() + 1);
@@ -581,8 +612,8 @@ void GestiRoute::setTouche(char clavier)
 			}
 		}
 
-		// Si le curseur est en position 4.
-		else if (position_curseur == 4)
+		// Si le curseur est en position 5.
+		else if (position_curseur == 5)
 		{
 			// Si on appuie sur Droite, on fait +1 à la proba de redemarrage, si on appuie sur Plus, on fait +10.
 			GestiRoute::setProbaResteArret(routes[route_a_gerer].getProbaResteArret() + 1);
@@ -593,15 +624,15 @@ void GestiRoute::setTouche(char clavier)
 			mode = 1;
 		}
 
-		// Si le curseur est en position 5.
-		else if (position_curseur == 5)
+		// Si le curseur est en position 12.
+		else if (position_curseur == 12)
 		{
 			// Si on fait Droite ou Plus, on ajoute une étape.
 			etape++;
 		}
 
-		// Si le curseur est en position 6.
-		else if (position_curseur == 6)
+		// Si le curseur est en position 8.
+		else if (position_curseur == 8)
 		{
 			// Si on appuie sur Droite, on fait +1 à la taille route, si on appuie sur Plus, on fait +5.
 			GestiRoute::setTailleRoute(routes[route_a_gerer].getTailleRoute() + 1);
@@ -611,8 +642,8 @@ void GestiRoute::setTouche(char clavier)
 			}
 		}
 
-		// Si le curseur est en position 7.
-		else if (position_curseur == 7)
+		// Si le curseur est en position 3.
+		else if (position_curseur == 3)
 		{
 			// Si on fait Droite ou Plus, on change de mode.
 			mode++;
@@ -622,8 +653,8 @@ void GestiRoute::setTouche(char clavier)
 			}
 		}
 
-		// Si le curseur est en position 8.
-		else if (position_curseur == 8)
+		// Si le curseur est en position 10.
+		else if (position_curseur == 10)
 		{
 			// Si on fait Droite, on fait +10 ms, si on fait Plus, on fait +100 ms.
 			vitDeDefil += 10;
@@ -640,7 +671,7 @@ void GestiRoute::setTouche(char clavier)
 			GestiRoute::creerliaisonRoutes();
 		}
 
-		else if (position_curseur == 10)
+		else if (position_curseur == 7)
 		{
 			GestiRoute::setLimiteVitesse(routes[route_a_gerer].getLimiteVitesse() + 1);
 			if (clavier == 43)
@@ -656,7 +687,7 @@ void GestiRoute::setTouche(char clavier)
 				mode_affichage = 2;
 		}
 
-		else if (position_curseur == 12)
+		else if (position_curseur == 13)
 		{
 			nb_rembobinage++;
 			if (clavier == 43)
@@ -665,7 +696,19 @@ void GestiRoute::setTouche(char clavier)
 			}
 		}
 
-		else if (position_curseur == 13)
+		else if (position_curseur == 6)
+		{
+			// Si on appuie sur Gauche, on fait -1 à la proba de redemarrage, si on appuie sur Moins, on fait -10.
+			probaDepassement++;
+			if (clavier == 43)
+			{
+				probaDepassement += 9;
+			}
+			if (probaDepassement > 100)
+				probaDepassement = 100;
+		}
+
+		else if (position_curseur == 14)
 		{
 			cb_de_rembobinage++;
 			if (cb_de_rembobinage > 0)
@@ -691,7 +734,7 @@ void GestiRoute::enleverRembobinage()
 }
 
 /*
-Méthode permettant d'enregistrer un etat de route 
+Méthode permettant d'enregistrer un etat de route
 */
 void GestiRoute::ajouterRembobinage()
 {
@@ -720,115 +763,6 @@ void GestiRoute::rembobiner()
 	liaisons = rembobinage_liaisons[num_des_routes];
 	Clear;
 	GestiRoute::sortieAffichage();
-}
-
-/*
-Méthode permettant l'affichage des routes et des liaisons.
-*/
-string GestiRoute::affichageRoutes()
-{
-	// Variable temp qui permet de stocker l'immatriculation avec ou sans le 0 derrière.
-	string temp = "";
-
-	// Variable qui contiendera le texte à afficher.
-	string route_a_afficher = "";
-
-	// Pour toutes les routes.
-	for (int i = 0; i < routes.size(); i++)
-	{
-		// On stocke la route à afficher.
-		vector<Voiture> v = routes[i].tabAffiche();
-
-		// Pour toutes les places de la route.
-		for (int j = 0; j < v.size(); j++)
-		{
-			// Si la place est occupé par une voiture vide, on fait une case vide.
-			if (v[j].getImatriculation() == -1)
-			{
-				if(mode_affichage == 0)
-					route_a_afficher.append("[    ]");
-				else if (mode_affichage == 1)
-					route_a_afficher.append("[ ]");
-				else
-					route_a_afficher.append("[  ]");
-			}
-
-			// Sinon on écrit une voiture avec immatriculation et vitesse.
-			else
-			{
-				temp = "";
-				route_a_afficher.append("[");
-
-				if (mode_affichage == 0 || mode_affichage == 2)
-				{
-					if (v[j].getImatriculation() <= 9)
-						temp += "0";
-					temp += to_string(v[j].getImatriculation());
-					route_a_afficher.append(temp);
-					if (mode_affichage == 0)
-						route_a_afficher.append(";");
-				}
-				if (mode_affichage == 0 || mode_affichage == 1)
-				{
-					route_a_afficher.append(to_string(v[j].getVitesse()));
-				}
-				route_a_afficher.append("]");
-			}
-		}
-
-		// On crée un vector avec tous les emplacements des liaisons de la route, dans le vector routes_liee.
-		vector<int> a = GestiRoute::routesLiee(i);
-
-		// Pour toutes les liaisons de la route i.
-		for(int k = 0; k < a.size(); k++)
-		{
-			// On fait un retour à la ligne après la route ou les liaisons.
-			route_a_afficher.append("\n");
-
-			// On prend la a eme route liee.
-			vector<Voiture> v = routes_liee[liaisons[a[k]][1]].tabAffiche();
-
-			// Pour toutes les places de la route.
-			for (int j = 0; j < v.size(); j++)
-			{
-				if (v[j].getImatriculation() == -1)
-				{
-					if (mode_affichage == 0)
-						route_a_afficher.append("[    ]");
-					else if (mode_affichage == 1)
-						route_a_afficher.append("[ ]");
-					else
-						route_a_afficher.append("[  ]");
-				}
-				else
-				{
-					temp = "";
-					route_a_afficher.append("[");
-
-					if (mode_affichage == 0 || mode_affichage == 2)
-					{
-						if (v[j].getImatriculation() <= 9)
-							temp += "0";
-						temp += to_string(v[j].getImatriculation());
-						route_a_afficher.append(temp);
-						if (mode_affichage == 0)
-							route_a_afficher.append(";");
-					}
-					if (mode_affichage == 0 || mode_affichage == 1)
-					{
-						route_a_afficher.append(to_string(v[j].getVitesse()));
-					}
-					route_a_afficher.append("]");
-				}
-			}
-		}
-		// On sépare les routes.
-		route_a_afficher.append("\n");
-		route_a_afficher.append("--------------------------------------------------------");
-		route_a_afficher.append("\n");
-	}
-	// On enregistre la route pour le rembobinage.
-	return route_a_afficher;
 }
 
 /*
@@ -861,281 +795,434 @@ string GestiRoute::nbEspaceAffichage(int nb_espace, int chiffre)
 	// On crée la chaine de caractère avec le nombre d'espace restant.
 	for (int i = 0; i < nb_espace; i++)
 		fin += " ";
-	
+
 	return fin;
 }
 
 /*
-Méthode permettant d'afficher les routes et les commandes.
+Méthode permettant l'affichage des routes et des liaisons.
 */
-void GestiRoute::sortieAffichage()
+void GestiRoute::affichageRoutes()
+{
+	// Variable temp qui permet de stocker l'immatriculation avec ou sans le 0 derrière.
+	string temp = "";
+
+	// Variable qui contiendera le texte à afficher.
+	routes_a_afficher = "";
+
+	// Pour toutes les routes.
+	for (int i = 0; i < routes.size(); i++)
+	{
+		// On stocke la route à afficher.
+		vector<Voiture> v = routes[i].tabAffiche();
+
+		// Pour toutes les places de la route.
+		for (int j = 0; j < v.size(); j++)
+		{
+			// Si la place est occupé par une voiture vide, on fait une case vide.
+			if (v[j].getImatriculation() == -1)
+			{
+				if (mode_affichage == 0)
+					routes_a_afficher.append("[    ]");
+				else if (mode_affichage == 1)
+					routes_a_afficher.append("[ ]");
+				else
+					routes_a_afficher.append("[  ]");
+			}
+
+			// Sinon on écrit une voiture avec immatriculation et vitesse.
+			else
+			{
+				temp = "";
+				routes_a_afficher.append("[");
+
+				if (mode_affichage == 0 || mode_affichage == 2)
+				{
+					if (v[j].getImatriculation() <= 9)
+						temp += "0";
+					temp += to_string(v[j].getImatriculation());
+					routes_a_afficher.append(temp);
+					if (mode_affichage == 0)
+						routes_a_afficher.append(";");
+				}
+				if (mode_affichage == 0 || mode_affichage == 1)
+				{
+					routes_a_afficher.append(to_string(v[j].getVitesse()));
+				}
+				routes_a_afficher.append("]");
+			}
+		}
+
+		// On crée un vector avec tous les emplacements des liaisons de la route, dans le vector routes_liee.
+		vector<int> a = GestiRoute::routesLiee(i);
+
+		// Pour toutes les liaisons de la route i.
+		for (int k = 0; k < a.size(); k++)
+		{
+			// On fait un retour à la ligne après la route ou les liaisons.
+			routes_a_afficher.append("\n");
+
+			// On prend la a eme route liee.
+			vector<Voiture> v = routes_liee[liaisons[a[k]][1]].tabAffiche();
+
+			// Pour toutes les places de la route.
+			for (int j = 0; j < v.size(); j++)
+			{
+				if (v[j].getImatriculation() == -1)
+				{
+					if (mode_affichage == 0)
+						routes_a_afficher.append("[    ]");
+					else if (mode_affichage == 1)
+						routes_a_afficher.append("[ ]");
+					else
+						routes_a_afficher.append("[  ]");
+				}
+				else
+				{
+					temp = "";
+					routes_a_afficher.append("[");
+
+					if (mode_affichage == 0 || mode_affichage == 2)
+					{
+						if (v[j].getImatriculation() <= 9)
+							temp += "0";
+						temp += to_string(v[j].getImatriculation());
+						routes_a_afficher.append(temp);
+						if (mode_affichage == 0)
+							routes_a_afficher.append(";");
+					}
+					if (mode_affichage == 0 || mode_affichage == 1)
+					{
+						routes_a_afficher.append(to_string(v[j].getVitesse()));
+					}
+					routes_a_afficher.append("]");
+				}
+			}
+		}
+		// On sépare les routes.
+		routes_a_afficher.append("\n");
+		routes_a_afficher.append("--------------------------------------------------------");
+		routes_a_afficher.append("\n");
+	}
+}
+
+/*
+Méthode permettant de créer l'affichage des commandes.
+*/
+void GestiRoute::affichageCommandes()
 {
 	// On initialise le nombre d'espace maximum que l'on veux et temp qui permettera de déterminer le nombre d'espace.
 	int nb_espaces = 10, temp = 0;
 
-	// On affiche les premières infos.
-	cout << "   ----------------------" << endl << "   PcSimuLesBouchons v2.0" << endl << "   ----------------------" << endl;
-	cout << "--------------------------------------------------------" << endl;
+	commandes_a_afficher = "";
 
-	// On affiche les routes.
-	cout << GestiRoute::affichageRoutes() << endl;
-
-	cout << endl;
+	commandes_a_afficher += "\n";
 
 	// Si on demande d'afficher les instructions ou pas.
-	if(affichage_instruction)
-		cout << "Utilisez les fleches directionnelles pour modifier les parametres." << endl << endl;
+	if (affichage_instruction)
+		commandes_a_afficher += "Utilisez les fleches directionnelles pour modifier les parametres.\n\n";
 
+
+	commandes_a_afficher += "Gestion des routes :\n";
 	// Si on est sur le curseur.
 	if (position_curseur == 0)
-		cout << "<[(";
+		commandes_a_afficher += "<[(";
 	else
-		cout << "  (";
+		commandes_a_afficher += "  (";
 
 	// On affiche l'info.
 	temp = routes.size();
-	cout << temp;
+	commandes_a_afficher += to_string(temp);
 
 	// Si on est sur le curseur.
 	if (position_curseur == 0)
-		cout << ")]>";
+		commandes_a_afficher += ")]>";
 	else
-		cout << ")  ";
+		commandes_a_afficher += ")  ";
 
 	// On affiche la correspondance.
-	cout << GestiRoute::nbEspaceAffichage(nb_espaces, temp) << "Nombre(s) de route(s)";
+	commandes_a_afficher += GestiRoute::nbEspaceAffichage(nb_espaces, temp) + "Nombre(s) de route(s)";
 
-	cout << endl;
-
-	if (position_curseur == 1)
-		cout << "<[(";
-	else
-		cout << "  (";
-
-	temp = route_a_gerer+1;
-	cout << temp;
+	commandes_a_afficher += "\n";
 
 	if (position_curseur == 1)
-		cout << ")]>";
+		commandes_a_afficher += "<[(";
 	else
-		cout << ")  ";
+		commandes_a_afficher += "  (";
 
-	cout << GestiRoute::nbEspaceAffichage(nb_espaces, temp) << "Numero de route a gerer";
+	temp = route_a_gerer + 1;
+	commandes_a_afficher += to_string(temp);
 
-	cout << endl;
+	if (position_curseur == 1)
+		commandes_a_afficher += ")]>";
+	else
+		commandes_a_afficher += ")  ";
+
+	commandes_a_afficher += GestiRoute::nbEspaceAffichage(nb_espaces, temp) + "Numero de route a gerer";
+
+	commandes_a_afficher += "\n";
 
 	if (position_curseur == 2)
-		cout << "<[(";
+		commandes_a_afficher += "<[(";
 	else
-		cout << "  (";
+		commandes_a_afficher += "  (";
 
 	temp = GestiRoute::getNbVoiture();
-	cout << temp;
+	commandes_a_afficher += to_string(temp);
 
 	if (position_curseur == 2)
-		cout << ")]>";
+		commandes_a_afficher += ")]>";
 	else
-		cout << ")  ";
+		commandes_a_afficher += ")  ";
 
-	cout << GestiRoute::nbEspaceAffichage(nb_espaces, temp) << "Nombre(s) de voiture(s) sur la route";
+	commandes_a_afficher += GestiRoute::nbEspaceAffichage(nb_espaces, temp) + "Nombre(s) de voiture(s) sur la route";
 
-	cout << endl;
+	commandes_a_afficher += "\n";
 
 	if (position_curseur == 3)
-		cout << "<[(";
+		commandes_a_afficher += "<[(";
 	else
-		cout << "  (";
+		commandes_a_afficher += "  (";
+
+	commandes_a_afficher += (mode == 0 ? "Nash" : "VDR");
+
+	if (position_curseur == 3)
+		commandes_a_afficher += ")]>";
+	else
+		commandes_a_afficher += ")  ";
+
+	commandes_a_afficher += GestiRoute::nbEspaceAffichage(nb_espaces, (mode == 0 ? 1000 : 100)) + "Mode";
+
+	commandes_a_afficher += "\n";
+
+	if (position_curseur == 4)
+		commandes_a_afficher += "<[(";
+	else
+		commandes_a_afficher += "  (";
 
 	temp = routes[route_a_gerer].getProbaFrein();
-	cout << temp;
-
-	if (position_curseur == 3)
-		cout << ")]>";
-	else
-		cout << ")  ";
-
-	cout << GestiRoute::nbEspaceAffichage(nb_espaces, temp) << "Probabilite de freinage";
-
-	cout << endl;
+	commandes_a_afficher += to_string(temp);
 
 	if (position_curseur == 4)
-		cout << "<[(";
+		commandes_a_afficher += ")]>";
 	else
-		cout << "  (";
+		commandes_a_afficher += ")  ";
+
+	commandes_a_afficher += GestiRoute::nbEspaceAffichage(nb_espaces, temp) + "Probabilite de freinage";
+
+	commandes_a_afficher += "\n";
+
+	if (position_curseur == 5)
+		commandes_a_afficher += "<[(";
+	else
+		commandes_a_afficher += "  (";
 
 	temp = routes[route_a_gerer].getProbaResteArret();
-	cout << temp;
-
-	if (position_curseur == 4)
-		cout << ")]>";
-	else
-		cout << ")  ";
-
-	cout << GestiRoute::nbEspaceAffichage(nb_espaces, temp) << "Probabilite de redemarrage";
-
-	cout << endl;
+	commandes_a_afficher += to_string(temp);
 
 	if (position_curseur == 5)
-		cout << "<[(";
+		commandes_a_afficher += ")]>";
 	else
-		cout << "  (";
+		commandes_a_afficher += ")  ";
 
-	temp = etape;
-	cout << temp;
+	commandes_a_afficher += GestiRoute::nbEspaceAffichage(nb_espaces, temp) + "Probabilite de redemarrage";
 
-	if (position_curseur == 5)
-		cout << ")]>";
-	else
-		cout << ")  ";
-
-	cout << GestiRoute::nbEspaceAffichage(nb_espaces, temp) << "Nombre d'etape a chaque affichage";
-
-	cout << endl;
+	commandes_a_afficher += "\n";
 
 	if (position_curseur == 6)
-		cout << "<[(";
+		commandes_a_afficher += "<[(";
 	else
-		cout << "  (";
+		commandes_a_afficher += "  (";
 
-	temp = routes[route_a_gerer].getTailleRoute();
-	cout << temp;
+	temp = probaDepassement;
+	commandes_a_afficher += to_string(temp);
 
 	if (position_curseur == 6)
-		cout << ")]>";
+		commandes_a_afficher += ")]>";
 	else
-		cout << ")  ";
+		commandes_a_afficher += ")  ";
 
-	cout << GestiRoute::nbEspaceAffichage(nb_espaces, temp) << "Taille de la route";
+	commandes_a_afficher += GestiRoute::nbEspaceAffichage(nb_espaces, temp) + "Probabilite de depassement";
 
-	cout << endl;
+	commandes_a_afficher += "\n";
 
 	if (position_curseur == 7)
-		cout << "<[(";
+		commandes_a_afficher += "<[(";
 	else
-		cout << "  (";
-
-	cout << (mode == 0 ? "Nash" : "VDR");
-
-	if (position_curseur == 7)
-		cout << ")]>";
-	else
-		cout << ")  ";
-
-	cout << GestiRoute::nbEspaceAffichage(nb_espaces, (mode == 0 ? 1000 : 100)) << "Mode";
-
-	cout << endl;
-
-	if (position_curseur == 8)
-		cout << "<[(";
-	else
-		cout << "  (";
-
-	temp = vitDeDefil;
-	cout << temp;
-
-	if (position_curseur == 8)
-		cout << ")]>";
-	else
-		cout << ")  ";
-
-	cout << GestiRoute::nbEspaceAffichage(nb_espaces, temp) << "Vitesse de defilement";
-
-	cout << endl;
-
-	if (position_curseur == 9)
-		cout << "<[(";
-	else
-		cout << "  (";
-
-	temp = GestiRoute::routesLiee(route_a_gerer).size();
-	cout << temp;
-
-	if (position_curseur == 9)
-		cout << ")]>";
-	else
-		cout << ")  ";
-
-	cout << GestiRoute::nbEspaceAffichage(nb_espaces, temp) << "Nombre de liaisons";
-
-	cout << endl;
-
-	if (position_curseur == 10)
-		cout << "<[(";
-	else
-		cout << "  (";
+		commandes_a_afficher += "  (";
 
 	temp = routes[route_a_gerer].getLimiteVitesse();
-	cout << temp;
+	commandes_a_afficher += to_string(temp);
+
+	if (position_curseur == 7)
+		commandes_a_afficher += ")]>";
+	else
+		commandes_a_afficher += ")  ";
+
+	commandes_a_afficher += GestiRoute::nbEspaceAffichage(nb_espaces, temp) + "Limite de vitesse";
+
+	commandes_a_afficher += "\n";
+
+	if (position_curseur == 8)
+		commandes_a_afficher += "<[(";
+	else
+		commandes_a_afficher += "  (";
+
+	temp = routes[route_a_gerer].getTailleRoute();
+	commandes_a_afficher += to_string(temp);
+
+	if (position_curseur == 8)
+		commandes_a_afficher += ")]>";
+	else
+		commandes_a_afficher += ")  ";
+
+	commandes_a_afficher += GestiRoute::nbEspaceAffichage(nb_espaces, temp) + "Taille de la route";
+
+	commandes_a_afficher += "\n";
+
+	if (position_curseur == 9)
+		commandes_a_afficher += "<[(";
+	else
+		commandes_a_afficher += "  (";
+
+	temp = GestiRoute::routesLiee(route_a_gerer).size();
+	commandes_a_afficher += to_string(temp);
+
+	if (position_curseur == 9)
+		commandes_a_afficher += ")]>";
+	else
+		commandes_a_afficher += ")  ";
+
+	commandes_a_afficher += GestiRoute::nbEspaceAffichage(nb_espaces, temp) + "Nombre de liaisons";
+
+	commandes_a_afficher += "\n";
+
+	commandes_a_afficher += "\nAffichage :\n";
 
 	if (position_curseur == 10)
-		cout << ")]>";
+		commandes_a_afficher += "<[(";
 	else
-		cout << ")  ";
+		commandes_a_afficher += "  (";
 
-	cout << GestiRoute::nbEspaceAffichage(nb_espaces, temp) << "Limite de vitesse";
+	temp = vitDeDefil;
+	commandes_a_afficher += to_string(temp);
 
-	cout << endl;
+	if (position_curseur == 10)
+		commandes_a_afficher += ")]>";
+	else
+		commandes_a_afficher += ")  ";
+
+	commandes_a_afficher += GestiRoute::nbEspaceAffichage(nb_espaces, temp) + "Vitesse de defilement";
+
+	commandes_a_afficher += "\n";
 
 	if (position_curseur == 11)
-		cout << "<[(";
+		commandes_a_afficher += "<[(";
 	else
-		cout << "  (";
+		commandes_a_afficher += "  (";
 
-	cout << (mode_affichage == 0 ? "Im/Vi" : mode_affichage == 1 ? "Vitesse" : "Immatri");
+	commandes_a_afficher += (mode_affichage == 0 ? "Im/Vi" : mode_affichage == 1 ? "Vitesse" : "Immatri");
 
 	if (position_curseur == 11)
-		cout << ")]>";
+		commandes_a_afficher += ")]>";
 	else
-		cout << ")  ";
+		commandes_a_afficher += ")  ";
 
-	cout << GestiRoute::nbEspaceAffichage(nb_espaces, (mode_affichage == 0 ? 10000 : 1000000)) << "Mode d'affichage";
+	commandes_a_afficher += GestiRoute::nbEspaceAffichage(nb_espaces, (mode_affichage == 0 ? 10000 : 1000000)) + "Mode d'affichage";
 
-	cout << endl;
+	commandes_a_afficher += "\n";
 
 	if (position_curseur == 12)
-		cout << "<[(";
+		commandes_a_afficher += "<[(";
 	else
-		cout << "  (";
+		commandes_a_afficher += "  (";
+
+	temp = etape;
+	commandes_a_afficher += to_string(temp);
+
+	if (position_curseur == 12)
+		commandes_a_afficher += ")]>";
+	else
+		commandes_a_afficher += ")  ";
+
+	commandes_a_afficher += GestiRoute::nbEspaceAffichage(nb_espaces, temp) + "Nombre d'etape a chaque affichage";
+
+	commandes_a_afficher += "\n";
+
+	commandes_a_afficher += "\nRembobinage :\n";
+
+	if (position_curseur == 13)
+		commandes_a_afficher += "<[(";
+	else
+		commandes_a_afficher += "  (";
 
 	temp = nb_rembobinage;
-	cout << temp;
+	commandes_a_afficher += to_string(temp);
 
-	if (position_curseur == 12)
-		cout << ")]>";
+	if (position_curseur == 13)
+		commandes_a_afficher += ")]>";
 	else
-		cout << ")  ";
+		commandes_a_afficher += ")  ";
 
-	cout << GestiRoute::nbEspaceAffichage(nb_espaces, temp) << "Nombre de rembobinage";
+	commandes_a_afficher += GestiRoute::nbEspaceAffichage(nb_espaces, temp) + "Nombre de rembobinage";
 
-	cout << endl;
+	commandes_a_afficher += "\n";
 
 	if (pause)
 	{
-		if (position_curseur == 13)
-			cout << "<[(";
+		if (position_curseur == 14)
+			commandes_a_afficher += "<[(";
 		else
-			cout << "  (";
+			commandes_a_afficher += "  (";
 
 		temp = cb_de_rembobinage;
-		cout << temp;
+		commandes_a_afficher += to_string(temp);
 
-		if (position_curseur == 13)
-			cout << ")]>";
+		if (position_curseur == 14)
+			commandes_a_afficher += ")]>";
 		else
-			cout << ")  ";
+			commandes_a_afficher += ")  ";
 
-		cout << GestiRoute::nbEspaceAffichage(nb_espaces, temp) << "Rembobinage";
+		commandes_a_afficher += GestiRoute::nbEspaceAffichage(nb_espaces, temp) + "Rembobinage";
 
-		cout << endl;
+		commandes_a_afficher += "\n";
 	}
 
 	if (affichage_instruction)
 	{
-		cout << endl;
-		cout << "Appuyer sur \"Espace\" pour mettre en pause la simulation et pouvoir utiliser le rembobinage." << endl << "Appuyer sur \"A\" pour afficher l'aide." << endl;
-		cout << "Appuyer sur \"N\" pour masquer/afficher les instructions." << endl << "Appuyer sur \"Q\" pour quitter" << endl;
+		commandes_a_afficher += "\n";
+		commandes_a_afficher += "Appuyer sur \"Espace\" pour mettre en pause la simulation et pouvoir utiliser le rembobinage.\nAppuyer sur \"A\" pour afficher l'aide.\n";
+		commandes_a_afficher += "Appuyer sur \"N\" pour masquer/afficher les instructions.\nAppuyer sur \"C\" pour marquer les commandes.\nAppuyer sur \"Q\" pour quitter";
 	}
 
+}
+
+/*
+Méthode permettant d'afficher les routes et les commandes (découpage permettant d'éviter les clignotements).
+*/
+void GestiRoute::sortieAffichage()
+{
+	// Si on appuie sur une touche, on actualise l'affichage des commandes et l'affichage des routes (sinon l'ajout des nouveaux éléments 
+	// s'effectue après l'actualisation avec 'VitDeDefil', sinon on actualise l'affichage des routes.
+	if (appuie_touche)
+	{
+		GestiRoute::affichageCommandes();
+		GestiRoute::affichageRoutes();
+		appuie_touche = false;
+	}
+	else
+		GestiRoute::affichageRoutes();
+	// Pour réduire les clignotements, on clear après les calculs.
+	Clear;
+
+	// On affiche les premières infos.
+	cout << "   ----------------------" << endl << "   PcSimuLesBouchons v3.0" << endl << "   ----------------------" << endl;
+	cout << "--------------------------------------------------------" << endl;
+
+	// On affiche les routes et les commandes.
+	cout << routes_a_afficher;
+	if (!masquer_commandes)
+		cout << commandes_a_afficher;
 }
 
 /*
@@ -1290,6 +1377,15 @@ void GestiRoute::help()
 	cout << "Debut, Fin, +, -." << endl;
 	cout << "Bon jeu !" << endl;
 	Pause;
+}
+
+/*
+Méthode qui détermine si une voiture doit dépasser selon la probabilité.
+*/
+bool GestiRoute::determineDepassement()
+{
+	// On retourne true ou false selon la valeur de l'aleatoire.
+	return (rand() % 100 < probaDepassement);
 }
 
 /*
