@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// PcSimuLesBouchons v2.0 : Classe GestiRoute
+// PcSimuLesBouchons v3.0 : Classe GestiRoute
 // --------------------------------
 
 #ifndef DEF_GESTIROUTE
@@ -17,7 +17,7 @@ public:
 	GestiRoute(int nb_voiture);
 
 	// Méthodes
-	std::string affichageRoutes();
+	void affichageRoutes();
 	void sortieAffichage();
 	void plusEtape();
 
@@ -47,8 +47,13 @@ private:
 	std::vector<std::vector<std::vector<int>>> rembobinage_liaisons;	// Contient les 'liaisons' d'avant.
 	int nb_rembobinage;													// Contient le nombre d'enregistrement que l'on veut.
 	int cb_de_rembobinage;												// Contient le la position du rembobinage que l'utilisateur veut aller.
+	std::string routes_a_afficher;										// Contient les routes à afficher.
+	std::string commandes_a_afficher;									// Contient les commandes a afficher.
+	bool appuie_touche;													// Pour savoir si une touche à été appuyé.
+	bool masquer_commandes;												// Pour savoir si l'utilisateur veut masquer les commandes.
+	int probaDepassement;												// Contient la proba de déplacement entre les liaisons. 
 
-	// Méthodes
+																		// Méthodes
 	bool intIn(int intt, std::vector<int> dans);
 	void ajouterRoute(int nb_voiture);
 	void supprimerRoute();
@@ -57,8 +62,10 @@ private:
 	void gestiLiaison();
 	void supprimeLiaison();
 	void help();
+	bool determineDepassement();
 	std::vector<int> routesLiee(int pos);
 	std::string nbEspaceAffichage(int nb_espace, int chiffre);
+	void affichageCommandes();
 	void ajouterVoiture();
 	void enleverVoiture();
 	void ajouterRembobinage();
