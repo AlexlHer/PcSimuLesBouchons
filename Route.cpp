@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// PcSimuLesBouchons v2.0 : Classe Route
+// PcSimuLesBouchons v3.0 : Classe Route
 // --------------------------------
 
 #include "Route.h"
@@ -26,7 +26,7 @@ Route::Route()
 	probaResteArret = 50;
 }
 
-/* 
+/*
 Constructeur d'une route avec un nombre de voiture défini.
 @param nbVoiture Le nombre de voiture.
 */
@@ -51,7 +51,7 @@ Route::Route(int nbVoiture)
 		tabVoiture.push_back(v);
 	}
 	// On fait une route avec deux cases par voitures.
-	tabRoute.resize(nbVoiture*2);
+	tabRoute.resize(nbVoiture * 2);
 
 	// On donne une probabilité de frenage aléatoire.
 	probaFrein = 10;
@@ -125,10 +125,10 @@ bool Route::intIn(int intt, vector<int> dans)
 /*
 Méthode pour ajouter une voiture dans la route.
 */
-void Route::ajouterVoiture() 
+void Route::ajouterVoiture()
 {
 	// Si il y a encore de la place sur la route.
-	if(tabVoiture.size() < tabRoute.size())
+	if (tabVoiture.size() < tabRoute.size())
 	{
 		// Vector qui contiendera les immatriculations déjà prise dans la route.
 		vector<int> immatri;
@@ -314,7 +314,7 @@ void Route::placementAleatoireDepart()
 		a = rand() % tabRoute.size();
 
 		// Tant que cette position est occupé, on choisi une autre position et on reteste.
-		while(tabRoute[a].getImatriculation() != -1)
+		while (tabRoute[a].getImatriculation() != -1)
 		{
 			a = rand() % tabRoute.size();
 		}
@@ -343,17 +343,8 @@ Méthode qui détermine si une voiture doit redemarrer selon la probabilité.
 */
 bool Route::determineResteArret()
 {
-	// On prend un vector qui contient probaResteArret true.
-	vector<bool> a(probaResteArret, true);
-
-	// On rempli le reste de false pour arriver a un vector de 100 de taille.
-	for (int i = 0; i < 100 - probaResteArret; i++)
-	{
-		a.push_back(false);
-	}
-
-	// On retourne un élément aléatoire du vector.
-	return a[rand() % 100];
+	// On retourne true ou false selon la valeur de l'aleatoire.
+	return (rand() % 100 < probaResteArret);
 }
 
 /*
@@ -361,17 +352,8 @@ Méthode qui détermine si une voiture doit freiner selon la probabilité.
 */
 bool Route::determineFrein()
 {
-	// On prend un vector qui contient probaFrein true.
-	vector<bool> a(probaFrein, true);
-
-	// On rempli le reste de false pour arriver a un vector de 100 de taille.
-	for (int i = 0; i < 100 - probaFrein; i++)
-	{
-		a.push_back(false);
-	}
-
-	// On retourne un élément aléatoire du vector.
-	return a[rand() % 100];
+	// On retourne true ou false selon la valeur de l'aleatoire.
+	return (rand() % 100 < probaFrein);
 }
 
 /*
@@ -416,7 +398,7 @@ void Route::modele(int nom_modele)
 
 		// On regarde si le modèle VDR est séléctionné, si la vitesse de la voiture est de 0 et si la proba de ne pas redemarrer est true.
 		// On met un ! devant pour inverser le résultat.
-		if ( !(nom_modele == 1 && vitesseVoiture == 0 && Route::determineResteArret()))
+		if (!(nom_modele == 1 && vitesseVoiture == 0 && Route::determineResteArret()))
 		{
 			// Si la voiture n'est pas à sa vitesse max, on ajoute +1 a sa vitesse.
 			if (limiteDeVitesse > vitesseVoiture)
