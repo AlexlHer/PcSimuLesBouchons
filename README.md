@@ -3,25 +3,19 @@
 Projet final d'Info121 du deuxième semestre de MPI.
 Ce projet consiste à simuler une route avec des voitures pouvant créer des bouchons.
 
-## ChangeLog de la dernière version (v2.0) : 
-## (Version SuperStable / Build 170/24/04/2017)
+## ChangeLog de la dernière version (v3.0) : 
+## (Version SuperStable / Build 186/28/04/2017)
 
-Changement de l'algorithme de dépassement des voitures dans les liaisons.
+Optimisation de l'affichage pour éviter trop de clignotement (mais impossible de les enlever pour l'instant).
 
-Construction des fonctions permettant un retour arrière !
+Modification de l'affichage des commandes :
 
-Ajout des touches Début et Fin pour l'interface.
+- Tri en fonction des commandes.
 
-Vitesse limité au nombre de case -1, liée à Route::espaceAvant qui détermine que la voiture 
-de devant est elle_même. Pas utile de résoudre cela puisque l'interet de mettre une seule voiture sur
-la route est nul.
+- Affichage de catégories.
 
-Correction de la boucle infinie lorsqu'une liaison est vide et qu'elle passe dans gestiLiaison.
+Ajout de condition pour le depassement de voitures.
 
-Bug dans supprimeLiaison résolu.
+Optimisations au niveau des determine_proba dans Route et GestiRoute.
 
-Bug de compilation g++ résolu (compilateur testés : VS++ et g++).
-
-Encore un peu de commentaire !
-
-Déplacement de ajouterRembobinage() de affichageRoute à etapePlus pour éviter les "trous" dans les enregistrement dù à l'appuie sur les touches.
+[Maj du projet Visual Studio 2015 vers Visual Studio 2017]
