@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// PcSimuLesBouchons v2.0 : Classe Voiture
+// PcSimuLesBouchons v3.0 : Classe Voiture
 // --------------------------------
 
 #include "Voiture.h"
