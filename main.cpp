@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// PcSimuLesBouchons v3.0
+// PcSimuLesBouchons v4.0
 // --------------------------------
 
 #include <iostream>
@@ -120,6 +120,10 @@ int main()
 
 /**
 Changelog :
+v4.0 : (version SuperStable)
+(build 200/16/05/2017)
+Ajout de la compatibilité avec l'interface. Reste compatible avec le main.cpp.
+Changelog de l'interface dans mainQt.cpp.
 
 v3.0 : (version SuperStable)
 (build 186/28/04/2017)
