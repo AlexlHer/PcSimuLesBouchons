@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// PcSimuLesBouchons v3.0 : Classe GestiRoute
+// PcSimuLesBouchons v4.0 : Classe GestiRoute
 // --------------------------------
 
 #include "GestiRoute.h"
@@ -85,6 +85,9 @@ GestiRoute::GestiRoute(int nb_voiture)
 	mode_affichage = 0;
 	nb_rembobinage = 10;
 	cb_de_rembobinage = 0;
+	etape_temp = 0;
+	vitDeDefil_temp = 0;
+	pause = false;
 	// Pour que les commandes s'affiche.
 	appuie_touche = true;
 	masquer_commandes = false;
@@ -202,7 +205,7 @@ void GestiRoute::gestiLiaison()
 				// On verifie si notre voiture est plus rapide que l'espace avant, si la vitesse de la voiture suivante est inferieur a la vitesse de notre voiture, si la case d'à coté est vide et celle de devant est vide.
 				if (((r1[j].getVitesse() >= espace_avant && r1[j].getVitesse() >= r1[espace_avant + 1].getVitesse())
 					||
-					(r1[j].getVitesse() == 0 && r1[j+1].getVitesse() == 0)) && r2[j].getImatriculation() == -1 && 
+					(r1[j].getVitesse() == 0 && r1[j + 1].getVitesse() == 0)) && r2[j].getImatriculation() == -1 &&
 					r2[j + 1].getImatriculation() == -1 && GestiRoute::determineDepassement())
 				{
 					// Si c'est le cas, on enleve la voiture et on la place à coté, une case plus haute (en diagonale).
@@ -303,7 +306,11 @@ void GestiRoute::setTouche(char clavier)
 
 	// Si on appuie sur A.
 	else if (clavier == 'a' || clavier == 'A')
-		GestiRoute::help();
+	{
+		Clear;
+		cout << GestiRoute::help();
+		Pause;
+	}
 
 	// Si on appuie sur Q.
 	else if (clavier == 'q' || clavier == 'Q')
@@ -802,13 +809,13 @@ string GestiRoute::nbEspaceAffichage(int nb_espace, int chiffre)
 /*
 Méthode permettant l'affichage des routes et des liaisons.
 */
-void GestiRoute::affichageRoutes()
+string GestiRoute::affichageRoutes()
 {
 	// Variable temp qui permet de stocker l'immatriculation avec ou sans le 0 derrière.
 	string temp = "";
 
 	// Variable qui contiendera le texte à afficher.
-	routes_a_afficher = "";
+	string routes_a_afficher = "";
 
 	// Pour toutes les routes.
 	for (int i = 0; i < routes.size(); i++)
@@ -904,6 +911,7 @@ void GestiRoute::affichageRoutes()
 		routes_a_afficher.append("--------------------------------------------------------");
 		routes_a_afficher.append("\n");
 	}
+	return routes_a_afficher;
 }
 
 /*
@@ -1202,20 +1210,20 @@ Méthode permettant d'afficher les routes et les commandes (découpage permettan
 */
 void GestiRoute::sortieAffichage()
 {
-	// Si on appuie sur une touche, on actualise l'affichage des commandes et l'affichage des routes (sinon l'ajout des nouveaux éléments 
-	// s'effectue après l'actualisation avec 'VitDeDefil', sinon on actualise l'affichage des routes.
+	// Si on appuie sur une touche, on actualise l'affichage des commandes et l'affichage des routes (sinon l'ajout des nouveaux �l�ments 
+	// s'effectue apr�s l'actualisation avec 'VitDeDefil', sinon on actualise l'affichage des routes.
 	if (appuie_touche)
 	{
 		GestiRoute::affichageCommandes();
-		GestiRoute::affichageRoutes();
+		routes_a_afficher = GestiRoute::affichageRoutes();
 		appuie_touche = false;
 	}
 	else
-		GestiRoute::affichageRoutes();
-	// Pour réduire les clignotements, on clear après les calculs.
+		routes_a_afficher = GestiRoute::affichageRoutes();
+	// Pour r�duire les clignotements, on clear apr�s les calculs.
 	Clear;
 
-	// On affiche les premières infos.
+	// On affiche les premi�res infos.
 	cout << "   ----------------------" << endl << "   PcSimuLesBouchons v3.0" << endl << "   ----------------------" << endl;
 	cout << "--------------------------------------------------------" << endl;
 
@@ -1357,26 +1365,25 @@ void GestiRoute::enleverVoiture()
 /*
 Méthode pour afficher l'aide.
 */
-void GestiRoute::help()
+string GestiRoute::help()
 {
-	Clear;
-	cout << "   -------------------------" << endl;
-	cout << "   PcSimuLesBouchons (PcSLB)" << endl;
-	cout << "     Alexandre l'Heritier   " << endl;
-	cout << "   -------------------------" << endl;
-	cout << endl;
-	cout << "Bienvenue dans PcSLB, programme cree pour le second semestre de L1 MPI." << endl;
-	cout << "Le but de ce programme est de simuler une route que l'on peut controler." << endl;
-	cout << "La route est representee avec des crochets comme ceci : [   ][   ][   ]." << endl;
-	cout << "Une voiture est represente comme ceci : [X;Y]" << endl;
-	cout << "X etant son immatriculation unique et Y sa vitesse." << endl;
-	cout << "Les routes sont separees avec cela : -----------------------------------." << endl;
-	cout << "Les liaisons des routes ne sont pas separées pour representer une route" << endl;
-	cout << "a plusieurs voies." << endl;
-	cout << "Pour naviguer plus rapidement dans l'interface, vous pouvez utiliser les touches" << endl;
-	cout << "Debut, Fin, +, -." << endl;
-	cout << "Bon jeu !" << endl;
-	Pause;
+	string fin;
+	fin =   "   -------------------------\n";
+	fin +=  "   PcSimuLesBouchons (PcSLB)\n";
+	fin +=  "     Alexandre l'Heritier   \n";
+	fin +=  "   -------------------------\n\n";
+	fin +=  "Bienvenue dans PcSLB, programme cree pour le second semestre de L1 MPI.\n";
+	fin +=  "Le but de ce programme est de simuler une route que l'on peut controler.\n";
+	fin +=  "La route est representee avec des crochets comme ceci : [   ][   ][   ].\n";
+	fin +=  "Une voiture est represente comme ceci : [X;Y]\n";
+	fin +=  "X etant son immatriculation unique et Y sa vitesse.\n";
+	fin +=  "Les routes sont separees avec cela : -----------------------------------.\n";
+	fin +=  "Les liaisons des routes ne sont pas separées pour representer une route\n";
+	fin +=  "a plusieurs voies.\n";
+	fin +=  "Pour naviguer plus rapidement dans l'interface, vous pouvez utiliser les touches\n";
+	fin +=  "Debut, Fin, +, -.\n";
+	fin +=  "Bon jeu !\n";
+	return fin;
 }
 
 /*
@@ -1414,6 +1421,56 @@ int GestiRoute::getNbVoiture()
 	}
 
 	return totalVoiture.size();
+}
+
+int GestiRoute::getProbaFrein()
+{
+	return routes[route_a_gerer].getProbaFrein();
+}
+
+int GestiRoute::getProbaRedemar()
+{
+	return routes[route_a_gerer].getProbaResteArret();
+}
+
+int GestiRoute::getProbaDepass()
+{
+	return probaDepassement;
+}
+
+int GestiRoute::getLimiteVitesse()
+{
+	return routes[route_a_gerer].getLimiteVitesse();
+}
+
+int GestiRoute::getTailleRoute()
+{
+	return routes[route_a_gerer].getTailleRoute();
+}
+
+int GestiRoute::getNbLiaison()
+{
+	return routesLiee(route_a_gerer).size();
+}
+
+int GestiRoute::getModeAffiche()
+{
+	return mode_affichage;
+}
+
+int GestiRoute::getEtape()
+{
+	return etape;
+}
+
+int GestiRoute::getNbRembob()
+{
+	return nb_rembobinage;
+}
+
+int GestiRoute::getNumRembob()
+{
+	return cb_de_rembobinage;
 }
 
 /*
@@ -1478,4 +1535,19 @@ Accesseur qui retourne le nombre de route.
 int GestiRoute::getNbRoutes()
 {
 	return routes.size();
+}
+
+int GestiRoute::getNumRoute()
+{
+	return route_a_gerer+1;
+}
+
+void GestiRoute::setPositionCurseur(int pos)
+{
+	position_curseur = pos;
+}
+
+int GestiRoute::getMode()
+{
+	return mode;
 }
