@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// PcSimuLesBouchons v3.0 : Classe GestiRoute
+// PcSimuLesBouchons v4.0 : Classe GestiRoute
 // --------------------------------
 
 #ifndef DEF_GESTIROUTE
@@ -17,14 +17,30 @@ public:
 	GestiRoute(int nb_voiture);
 
 	// Méthodes
-	void affichageRoutes();
-	void sortieAffichage();
+	std::string affichageRoutes();
 	void plusEtape();
 
 	// Accesseurs
 	int vitesse();
 	void setTouche(char clavier);
+	void sortieAffichage();
 	bool getQuit();
+	void setPositionCurseur(int pos);
+	int getMode();
+	int getNbRoutes();
+	int getNumRoute();
+	int getNbVoiture();
+	int getProbaFrein();
+	int getProbaRedemar();
+	int getProbaDepass();
+	int getLimiteVitesse();
+	int getTailleRoute();
+	int getNbLiaison();
+	int getModeAffiche();
+	int getEtape();
+	int getNbRembob();
+	int getNumRembob();
+	std::string help();
 
 private:
 	// Attributs
@@ -55,13 +71,12 @@ private:
 
 																		// Méthodes
 	bool intIn(int intt, std::vector<int> dans);
-	void ajouterRoute(int nb_voiture);
 	void supprimerRoute();
+	void ajouterRoute(int nb_voiture);
 	bool voitureIn(Voiture v, std::vector<Voiture> dans);
 	void creerliaisonRoutes();
 	void gestiLiaison();
 	void supprimeLiaison();
-	void help();
 	bool determineDepassement();
 	std::vector<int> routesLiee(int pos);
 	std::string nbEspaceAffichage(int nb_espace, int chiffre);
@@ -74,8 +89,6 @@ private:
 	void setProbaFrein(int pourcent);
 	void setProbaResteArret(int pourcent);
 	void setTailleRoute(int taille);
-	int getNbRoutes();
-	int getNbVoiture();
 	void setLimiteVitesse(int v);
 };
 
