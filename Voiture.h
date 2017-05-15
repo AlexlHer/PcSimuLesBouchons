@@ -1,6 +1,6 @@
 // --------------------------------
 // Auteur : Alexandre l'Heritier
-// PcSimuLesBouchons v3.0 : Classe Voiture
+// PcSimuLesBouchons v4.0 : Classe Voiture
 // --------------------------------
 
 #ifndef DEF_VOITURE
